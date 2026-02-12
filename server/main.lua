@@ -1,17 +1,7 @@
-local function GenerateCitizenId()
-    local charset = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
-    local id = 'BRK'
-    for _ = 1, 5 do
-        local rand = math.random(1, #charset)
-        id = id .. charset:sub(rand, rand)
-    end
-    -- Vérifier l'unicité
-    local exists = MySQL.scalar.await('SELECT COUNT(*) FROM brickston_characters WHERE citizenid = ?', { id })
-    if exists and exists > 0 then
-        return GenerateCitizenId()
-    end
-    return id
-end
+-- ════════════════════════════════════════════════════════════
+-- BRICKSTON CHARACTER - SERVER
+-- Auto-insert / update dans la table `users`
+-- ════════════════════════════════════════════════════════════
 
 local function GetPlayerLicense(source)
     local identifiers = GetPlayerIdentifiers(source)
@@ -23,37 +13,95 @@ local function GetPlayerLicense(source)
     return nil
 end
 
--- Récupérer les personnages d'un joueur
-lib.callback.register('brickston_character:getCharacters', function(source)
-    local license = GetPlayerLicense(source)
-    if not license then
-        return {}
-    end
+-- ════════════════════════════════════════════
+-- AUTO-INSERT dans users à la connexion
+-- ════════════════════════════════════════════
 
-    local characters = MySQL.query.await(
-        'SELECT * FROM brickston_characters WHERE license = ? ORDER BY last_played DESC',
+-- S'assurer que le joueur a une entrée dans la table users
+local function EnsureUserExists(source)
+    local license = GetPlayerLicense(source)
+    if not license then return nil end
+
+    local exists = MySQL.scalar.await(
+        'SELECT COUNT(*) FROM users WHERE license = ?',
         { license }
     )
 
-    return characters or {}
-end)
-
--- Vérifier si le joueur peut créer un nouveau personnage
-lib.callback.register('brickston_character:canCreateCharacter', function(source)
-    local license = GetPlayerLicense(source)
-    if not license then
-        return false
+    if exists == 0 then
+        MySQL.insert.await(
+            'INSERT INTO users (license, is_created) VALUES (?, 0)',
+            { license }
+        )
+        print(('[brickston_character] Nouveau joueur inséré dans users: %s (%s)'):format(GetPlayerName(source), license))
     end
 
-    local count = MySQL.scalar.await(
-        'SELECT COUNT(*) FROM brickston_characters WHERE license = ?',
+    return license
+end
+
+-- Auto-insert quand un joueur se connecte
+AddEventHandler('playerConnecting', function(name, setKickReason, deferrals)
+    local source = source
+    deferrals.defer()
+    Wait(0)
+    deferrals.update('Vérification du compte...')
+
+    local license = GetPlayerLicense(source)
+    if not license then
+        deferrals.done('Impossible de récupérer votre licence. Relancez FiveM.')
+        return
+    end
+
+    -- Auto-insert dans la table users
+    local exists = MySQL.scalar.await(
+        'SELECT COUNT(*) FROM users WHERE license = ?',
         { license }
     )
 
-    return (count or 0) < Config.MaxCharacters
+    if exists == 0 then
+        MySQL.insert.await(
+            'INSERT INTO users (license, is_created) VALUES (?, 0)',
+            { license }
+        )
+        print(('[brickston_character] Nouveau joueur: %s (%s)'):format(name, license))
+    end
+
+    deferrals.done()
 end)
 
--- Créer un personnage
+-- ════════════════════════════════════════════
+-- CALLBACKS
+-- ════════════════════════════════════════════
+
+-- Vérifier si le joueur a déjà créé un personnage
+lib.callback.register('brickston_character:hasCharacter', function(source)
+    local license = GetPlayerLicense(source)
+    if not license then return false end
+
+    local isCreated = MySQL.scalar.await(
+        'SELECT is_created FROM users WHERE license = ?',
+        { license }
+    )
+
+    return isCreated == 1
+end)
+
+-- Récupérer les données du personnage
+lib.callback.register('brickston_character:getCharacter', function(source)
+    local license = GetPlayerLicense(source)
+    if not license then return nil end
+
+    local character = MySQL.single.await(
+        'SELECT sexe, firstname, lastname, nationality, height, birthdate, skin, position, last_played FROM users WHERE license = ? AND is_created = 1',
+        { license }
+    )
+
+    return character
+end)
+
+-- ════════════════════════════════════════════
+-- CREATION DE PERSONNAGE
+-- ════════════════════════════════════════════
+
 RegisterNetEvent('brickston_character:createCharacter', function(data)
     local source = source
     local license = GetPlayerLicense(source)
@@ -67,16 +115,16 @@ RegisterNetEvent('brickston_character:createCharacter', function(data)
         return
     end
 
-    -- Vérifier le nombre de personnages
-    local count = MySQL.scalar.await(
-        'SELECT COUNT(*) FROM brickston_characters WHERE license = ?',
+    -- Vérifier si le personnage existe déjà
+    local isCreated = MySQL.scalar.await(
+        'SELECT is_created FROM users WHERE license = ?',
         { license }
     )
 
-    if (count or 0) >= Config.MaxCharacters then
+    if isCreated == 1 then
         TriggerClientEvent('ox_lib:notify', source, {
             title = 'Erreur',
-            description = 'Nombre maximum de personnages atteint.',
+            description = 'Vous avez déjà créé un personnage.',
             type = 'error',
         })
         return
@@ -115,8 +163,6 @@ RegisterNetEvent('brickston_character:createCharacter', function(data)
         return
     end
 
-    local citizenid = GenerateCitizenId()
-
     -- Position par défaut en JSON
     local defaultPos = json.encode({
         x = Config.DefaultSpawn.x,
@@ -125,9 +171,10 @@ RegisterNetEvent('brickston_character:createCharacter', function(data)
         w = Config.DefaultSpawn.w,
     })
 
-    MySQL.insert.await(
-        'INSERT INTO brickston_characters (citizenid, license, gender, firstname, lastname, nationality, height, birthdate, position, last_played) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())',
-        { citizenid, license, data.gender, firstName, lastName, data.nationality, height, data.birthDate, defaultPos }
+    -- UPDATE la ligne existante dans users (auto-insert fait à la connexion)
+    MySQL.update.await(
+        'UPDATE users SET sexe = ?, firstname = ?, lastname = ?, nationality = ?, height = ?, birthdate = ?, position = ?, last_played = NOW(), is_created = 1 WHERE license = ?',
+        { data.gender, firstName, lastName, data.nationality, height, data.birthDate, defaultPos, license }
     )
 
     TriggerClientEvent('ox_lib:notify', source, {
@@ -138,7 +185,7 @@ RegisterNetEvent('brickston_character:createCharacter', function(data)
 
     -- Notifier le client que la création est terminée
     TriggerClientEvent('brickston_character:characterCreated', source, {
-        citizenid = citizenid,
+        license = license,
         gender = data.gender,
         firstName = firstName,
         lastName = lastName,
@@ -147,25 +194,28 @@ RegisterNetEvent('brickston_character:createCharacter', function(data)
         birthDate = data.birthDate,
     })
 
-    print(('[brickston_character] Personnage créé: %s %s (CID: %s) par %s'):format(firstName, lastName, citizenid, GetPlayerName(source)))
+    print(('[brickston_character] Personnage créé: %s %s par %s'):format(firstName, lastName, GetPlayerName(source)))
 end)
 
--- Sélectionner un personnage
-RegisterNetEvent('brickston_character:selectCharacter', function(citizenid)
+-- ════════════════════════════════════════════
+-- CHARGEMENT DU PERSONNAGE
+-- ════════════════════════════════════════════
+
+RegisterNetEvent('brickston_character:loadCharacter', function()
     local source = source
     local license = GetPlayerLicense(source)
 
     if not license then return end
 
     local character = MySQL.single.await(
-        'SELECT * FROM brickston_characters WHERE citizenid = ? AND license = ?',
-        { citizenid, license }
+        'SELECT sexe, firstname, lastname, nationality, height, birthdate, skin, position, last_played FROM users WHERE license = ? AND is_created = 1',
+        { license }
     )
 
     if not character then
         TriggerClientEvent('ox_lib:notify', source, {
             title = 'Erreur',
-            description = 'Personnage introuvable.',
+            description = 'Aucun personnage trouvé. Veuillez en créer un.',
             type = 'error',
         })
         return
@@ -173,50 +223,26 @@ RegisterNetEvent('brickston_character:selectCharacter', function(citizenid)
 
     -- Mettre à jour la date de dernière connexion
     MySQL.update.await(
-        'UPDATE brickston_characters SET last_played = NOW() WHERE citizenid = ?',
-        { citizenid }
+        'UPDATE users SET last_played = NOW() WHERE license = ?',
+        { license }
     )
 
     -- Envoyer les données au client pour le spawn
     TriggerClientEvent('brickston_character:spawnCharacter', source, character)
 
-    print(('[brickston_character] %s a sélectionné le personnage %s %s (CID: %s)'):format(
-        GetPlayerName(source), character.firstname, character.lastname, citizenid
+    print(('[brickston_character] %s a chargé le personnage %s %s'):format(
+        GetPlayerName(source), character.firstname, character.lastname
     ))
 end)
 
--- Supprimer un personnage
-RegisterNetEvent('brickston_character:deleteCharacter', function(citizenid)
+-- ════════════════════════════════════════════
+-- SAUVEGARDE POSITION
+-- ════════════════════════════════════════════
+
+RegisterNetEvent('brickston_character:savePosition', function(coords)
     local source = source
     local license = GetPlayerLicense(source)
-
-    if not license then return end
-
-    local affected = MySQL.update.await(
-        'DELETE FROM brickston_characters WHERE citizenid = ? AND license = ?',
-        { citizenid, license }
-    )
-
-    if affected and affected > 0 then
-        TriggerClientEvent('ox_lib:notify', source, {
-            title = 'Brickston RP',
-            description = 'Personnage supprimé.',
-            type = 'success',
-        })
-
-        -- Renvoyer la liste mise à jour
-        local characters = MySQL.query.await(
-            'SELECT * FROM brickston_characters WHERE license = ? ORDER BY last_played DESC',
-            { license }
-        )
-        TriggerClientEvent('brickston_character:refreshCharacters', source, characters or {})
-    end
-end)
-
--- Sauvegarder la position du joueur
-RegisterNetEvent('brickston_character:savePosition', function(citizenid, coords)
-    local source = source
-    if not citizenid or not coords then return end
+    if not license or not coords then return end
 
     local pos = json.encode({
         x = coords.x,
@@ -225,10 +251,26 @@ RegisterNetEvent('brickston_character:savePosition', function(citizenid, coords)
         w = coords.w or 0.0,
     })
 
-    MySQL.update('UPDATE brickston_characters SET position = ? WHERE citizenid = ?', { pos, citizenid })
+    MySQL.update('UPDATE users SET position = ? WHERE license = ?', { pos, license })
 end)
 
--- Sauvegarde automatique de la position à la déconnexion
+-- ════════════════════════════════════════════
+-- SAUVEGARDE SKIN
+-- ════════════════════════════════════════════
+
+RegisterNetEvent('brickston_character:saveSkin', function(skinData)
+    local source = source
+    local license = GetPlayerLicense(source)
+    if not license or not skinData then return end
+
+    local skin = json.encode(skinData)
+    MySQL.update('UPDATE users SET skin = ? WHERE license = ?', { skin, license })
+end)
+
+-- ════════════════════════════════════════════
+-- DECONNEXION
+-- ════════════════════════════════════════════
+
 AddEventHandler('playerDropped', function()
     local source = source
     -- La sauvegarde de position est gérée côté client avant la déconnexion
