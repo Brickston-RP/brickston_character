@@ -4,6 +4,7 @@
 -- ════════════════════════════════════════════════════════════
 
 ALTER TABLE `users`
+    ADD COLUMN IF NOT EXISTS `license` VARCHAR(100) NULL,
     ADD COLUMN IF NOT EXISTS `sexe` VARCHAR(10) NOT NULL DEFAULT 'male',
     ADD COLUMN IF NOT EXISTS `firstname` VARCHAR(50) NULL,
     ADD COLUMN IF NOT EXISTS `lastname` VARCHAR(50) NULL,
@@ -14,3 +15,6 @@ ALTER TABLE `users`
     ADD COLUMN IF NOT EXISTS `position` TEXT NULL,
     ADD COLUMN IF NOT EXISTS `last_played` TIMESTAMP NULL,
     ADD COLUMN IF NOT EXISTS `is_created` TINYINT(1) NOT NULL DEFAULT 0;
+
+-- Index sur license pour les recherches rapides
+CREATE INDEX IF NOT EXISTS `idx_users_license` ON `users` (`license`);
