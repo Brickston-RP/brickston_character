@@ -834,7 +834,9 @@
     </div>
 
     <script>
-        // Variables globales
+        // ════════════════════════════════════════════
+        // VARIABLES GLOBALES
+        // ════════════════════════════════════════════
         let selectedGender = null;
         const characterData = {
             gender: null,
@@ -845,7 +847,61 @@
             birthDate: { day: '', month: '', year: '' }
         };
 
-        // Initialisation
+        // ════════════════════════════════════════════
+        // NUI MESSAGE HANDLER
+        // ════════════════════════════════════════════
+        window.addEventListener('message', (event) => {
+            const data = event.data;
+            switch (data.action) {
+                case 'openCreator':
+                    showCreator();
+                    break;
+                case 'closeCreator':
+                    hideCreator();
+                    break;
+            }
+        });
+
+        function showCreator() {
+            document.querySelector('.main-container').style.display = 'flex';
+            document.body.style.transition = 'opacity 0.5s';
+            document.body.style.opacity = '1';
+            resetForm();
+        }
+
+        function hideCreator() {
+            document.body.style.transition = 'opacity 0.5s';
+            document.body.style.opacity = '0';
+            setTimeout(() => {
+                document.querySelector('.main-container').style.display = 'none';
+            }, 500);
+        }
+
+        function resetForm() {
+            selectedGender = null;
+            characterData.gender = null;
+            characterData.firstName = '';
+            characterData.lastName = '';
+            characterData.nationality = '';
+            characterData.height = null;
+            characterData.birthDate = { day: '', month: '', year: '' };
+
+            document.getElementById('male').classList.remove('selected');
+            document.getElementById('female').classList.remove('selected');
+            document.getElementById('firstName').value = '';
+            document.getElementById('lastName').value = '';
+            document.getElementById('nationality').value = '';
+            document.getElementById('birthDay').value = '';
+            document.getElementById('birthMonth').value = '';
+            document.getElementById('birthYear').value = '';
+            document.getElementById('height').value = 175;
+            updateHeightSlider(175);
+            validateForm();
+        }
+
+        // ════════════════════════════════════════════
+        // INITIALISATION
+        // ════════════════════════════════════════════
         function init() {
             // Remplir les jours (1-31)
             const daySelect = document.getElementById('birthDay');
@@ -868,34 +924,47 @@
             }
         }
 
-        // Sélection du genre
+        // ════════════════════════════════════════════
+        // GENRE
+        // ════════════════════════════════════════════
         function selectGender(gender) {
             selectedGender = gender;
             characterData.gender = gender;
-            
+
             document.getElementById('male').classList.remove('selected');
             document.getElementById('female').classList.remove('selected');
             document.getElementById(gender).classList.add('selected');
-            
+
+            // Notifier le client Lua pour changer le ped
+            fetch(`https://${GetParentResourceName()}/selectGender`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ gender: gender })
+            });
+
             updatePreview();
             validateForm();
         }
 
-        // Mise à jour du slider de taille
+        // ════════════════════════════════════════════
+        // SLIDER TAILLE
+        // ════════════════════════════════════════════
         function updateHeightSlider(value) {
             const heightValue = document.getElementById('heightValue');
             const sliderProgress = document.getElementById('sliderProgress');
-            
+
             heightValue.textContent = value + ' cm';
-            
+
             // Calculer le pourcentage (140-220 = 80 de range)
             const percentage = ((value - 140) / 80) * 100;
             sliderProgress.style.width = percentage + '%';
-            
+
             updatePreview();
         }
 
-        // Mise à jour de l'aperçu
+        // ════════════════════════════════════════════
+        // APERCU / VALIDATION
+        // ════════════════════════════════════════════
         function updatePreview() {
             const firstName = document.getElementById('firstName').value;
             const lastName = document.getElementById('lastName').value;
@@ -905,7 +974,6 @@
             const month = document.getElementById('birthMonth').value;
             const year = document.getElementById('birthYear').value;
 
-            // Mise à jour des données
             characterData.firstName = firstName;
             characterData.lastName = lastName;
             characterData.nationality = nationality;
@@ -915,7 +983,6 @@
             validateForm();
         }
 
-        // Validation du formulaire
         function validateForm() {
             const firstName = document.getElementById('firstName').value.trim();
             const lastName = document.getElementById('lastName').value.trim();
@@ -925,7 +992,7 @@
             const month = document.getElementById('birthMonth').value;
             const year = document.getElementById('birthYear').value;
 
-            const isValid = 
+            const isValid =
                 selectedGender !== null &&
                 firstName.length >= 2 && firstName.length <= 20 &&
                 lastName.length >= 2 && lastName.length <= 20 &&
@@ -936,25 +1003,28 @@
             document.getElementById('btnCreate').disabled = !isValid;
         }
 
-        // Création du personnage
+        // ════════════════════════════════════════════
+        // CREATION PERSONNAGE
+        // ════════════════════════════════════════════
         function createCharacter() {
+            const btn = document.getElementById('btnCreate');
+            btn.disabled = true;
+            btn.textContent = 'CRÉATION...';
+
             const data = {
                 gender: characterData.gender,
-                firstName: characterData.firstName,
-                lastName: characterData.lastName,
+                firstName: characterData.firstName.trim(),
+                lastName: characterData.lastName.trim(),
                 nationality: characterData.nationality,
                 height: characterData.height,
                 birthDate: `${characterData.birthDate.day}/${characterData.birthDate.month}/${characterData.birthDate.year}`
             };
 
-            console.log('Création du personnage:', data);
-
-            // Animation
+            // Animation de sortie
             document.body.style.transition = 'opacity 0.5s';
             document.body.style.opacity = '0';
 
             setTimeout(() => {
-                // Appel NUI
                 fetch(`https://${GetParentResourceName()}/createCharacter`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -963,32 +1033,40 @@
             }, 500);
         }
 
-        // Annulation
+        // ════════════════════════════════════════════
+        // ANNULATION
+        // ════════════════════════════════════════════
         function cancelCreation() {
-            if (confirm('Êtes-vous sûr de vouloir annuler la création ?')) {
-                document.body.style.opacity = '0';
-                setTimeout(() => {
-                    fetch(`https://${GetParentResourceName()}/cancelCreation`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({})
-                    });
-                }, 300);
-            }
+            document.body.style.transition = 'opacity 0.3s';
+            document.body.style.opacity = '0';
+            setTimeout(() => {
+                fetch(`https://${GetParentResourceName()}/cancelCreation`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({})
+                });
+            }, 300);
         }
 
+        // ════════════════════════════════════════════
+        // NUI RESOURCE NAME
+        // ════════════════════════════════════════════
         function GetParentResourceName() {
-            return 'brickston_multichar';
+            if (window.invokeNative) {
+                return window.GetParentResourceName ? window.GetParentResourceName() : 'brickston_character';
+            }
+            return 'brickston_character';
         }
 
-        // Navigation au clavier
+        // ════════════════════════════════════════════
+        // KEYBOARD / INPUT
+        // ════════════════════════════════════════════
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') {
                 cancelCreation();
             }
         });
 
-        // Validation temps réel sur les inputs
         document.getElementById('firstName').addEventListener('input', (e) => {
             e.target.value = e.target.value.replace(/[^a-zA-ZÀ-ÿ\s-]/g, '');
         });
@@ -997,16 +1075,14 @@
             e.target.value = e.target.value.replace(/[^a-zA-ZÀ-ÿ\s-]/g, '');
         });
 
-        // Animation d'entrée
+        // ════════════════════════════════════════════
+        // DÉMARRAGE
+        // ════════════════════════════════════════════
         window.addEventListener('load', () => {
             document.body.style.opacity = '0';
-            setTimeout(() => {
-                document.body.style.transition = 'opacity 0.5s';
-                document.body.style.opacity = '1';
-                init();
-                // Initialiser le slider
-                updateHeightSlider(175);
-            }, 100);
+            document.querySelector('.main-container').style.display = 'none';
+            init();
+            updateHeightSlider(175);
         });
     </script>
 </body>
