@@ -1,0 +1,1013 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Brickston RP - Création de Personnage</title>
+    <link href="https://fonts.cdnfonts.com/css/abc-ginto-nord" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'ABC Ginto Nord', 'Bebas Neue', 'Impact', sans-serif;
+            background: #151515;
+            color: #ffffff;
+            overflow: hidden;
+            height: 100vh;
+            position: relative;
+        }
+
+        /* Background Blur Effect */
+        .background-blur {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                linear-gradient(90deg, rgba(21, 21, 21, 0.95) 0%, rgba(21, 21, 21, 0.7) 40%, transparent 100%),
+                radial-gradient(circle at 70% 50%, rgba(191, 23, 49, 0.1) 0%, transparent 50%);
+            backdrop-filter: blur(8px);
+            z-index: 1;
+        }
+
+        /* Main Container */
+        .main-container {
+            position: relative;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            padding: 60px;
+            z-index: 10;
+        }
+
+        /* Creation Card */
+        .creation-card {
+            width: 550px;
+            background: rgba(28, 30, 44, 0.95);
+            backdrop-filter: blur(20px);
+            border: 3px solid #bf1731;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 
+                0 30px 80px rgba(0, 0, 0, 0.9),
+                0 0 40px rgba(191, 23, 49, 0.4),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            animation: slideInLeft 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+            max-height: 90vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        @keyframes slideInLeft {
+            from {
+                opacity: 0;
+                transform: translateX(-100px) scale(0.9);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0) scale(1);
+            }
+        }
+
+        /* Card Header */
+        .card-header {
+            background: linear-gradient(135deg, #bf1731 0%, #8f1225 100%);
+            padding: 25px 30px;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            border-bottom: 2px solid rgba(34, 50, 95, 0.5);
+            position: relative;
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+
+        .card-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                repeating-linear-gradient(
+                    45deg,
+                    transparent,
+                    transparent 10px,
+                    rgba(255, 255, 255, 0.03) 10px,
+                    rgba(255, 255, 255, 0.03) 20px
+                );
+        }
+
+        .header-logo {
+            width: 70px;
+            height: 70px;
+            background: rgba(255, 255, 255, 0.15);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            flex-shrink: 0;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            position: relative;
+            z-index: 1;
+        }
+
+        .header-text {
+            flex: 1;
+            position: relative;
+            z-index: 1;
+        }
+
+        .header-title {
+            font-size: 28px;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: #ffffff;
+            line-height: 1;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+
+        .header-subtitle {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.8);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            font-weight: 300;
+            margin-top: 5px;
+        }
+
+        /* Card Body */
+        .card-body {
+            padding: 35px 30px;
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        .card-body::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .card-body::-webkit-scrollbar-track {
+            background: rgba(21, 21, 21, 0.3);
+        }
+
+        .card-body::-webkit-scrollbar-thumb {
+            background: #bf1731;
+            border-radius: 3px;
+        }
+
+        .section-title {
+            font-size: 18px;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: #ffffff;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid rgba(191, 23, 49, 0.3);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .section-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #bf1731 0%, #8f1225 100%);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            box-shadow: 0 4px 12px rgba(191, 23, 49, 0.4);
+        }
+
+        /* Gender Selection */
+        .gender-selection {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .gender-option {
+            padding: 25px;
+            background: rgba(21, 21, 21, 0.5);
+            border: 2px solid rgba(34, 50, 95, 0.5);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .gender-option::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(191, 23, 49, 0.1), transparent);
+            transition: left 0.6s;
+        }
+
+        .gender-option:hover::before {
+            left: 100%;
+        }
+
+        .gender-option:hover {
+            border-color: #bf1731;
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(191, 23, 49, 0.3);
+        }
+
+        .gender-option.selected {
+            background: rgba(191, 23, 49, 0.2);
+            border-color: #bf1731;
+            box-shadow: 0 0 30px rgba(191, 23, 49, 0.4);
+        }
+
+        .gender-icon {
+            font-size: 48px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .gender-label {
+            font-size: 18px;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #ffffff;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Form Groups */
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 13px;
+            text-transform: uppercase;
+            color: #999999;
+            font-weight: 700;
+            letter-spacing: 1px;
+            margin-bottom: 10px;
+            padding-left: 5px;
+        }
+
+        .form-label .required {
+            color: #bf1731;
+            margin-left: 5px;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 16px 20px;
+            background: rgba(21, 21, 21, 0.6);
+            border: 2px solid rgba(34, 50, 95, 0.5);
+            border-radius: 10px;
+            color: #ffffff;
+            font-size: 16px;
+            font-weight: 500;
+            font-family: 'ABC Ginto Nord', sans-serif;
+            transition: all 0.3s ease;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #bf1731;
+            background: rgba(21, 21, 21, 0.8);
+            box-shadow: 0 0 0 4px rgba(191, 23, 49, 0.15);
+        }
+
+        .form-input::placeholder {
+            color: #666666;
+            font-weight: 400;
+        }
+
+        .form-input:hover {
+            border-color: rgba(191, 23, 49, 0.5);
+        }
+
+        /* Select Style */
+        select.form-input {
+            cursor: pointer;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23bf1731' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 20px center;
+            padding-right: 50px;
+        }
+
+        select.form-input option {
+            background: #1c1e2c;
+            color: #ffffff;
+            padding: 10px;
+        }
+
+        /* Date Inputs Grid */
+        .date-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1.2fr;
+            gap: 12px;
+        }
+
+        /* Action Buttons */
+        .action-buttons {
+            display: flex;
+            gap: 12px;
+            margin-top: 30px;
+            padding-top: 25px;
+            border-top: 2px solid rgba(34, 50, 95, 0.3);
+        }
+
+        .btn {
+            flex: 1;
+            padding: 18px;
+            font-size: 15px;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            font-family: 'ABC Ginto Nord', sans-serif;
+            border: 2px solid;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+            text-align: center;
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .btn:hover::before {
+            left: 100%;
+        }
+
+        .btn-cancel {
+            background: transparent;
+            border-color: #666666;
+            color: #999999;
+        }
+
+        .btn-cancel:hover {
+            background: rgba(102, 102, 102, 0.2);
+            border-color: #999999;
+            color: #ffffff;
+            transform: translateY(-3px);
+        }
+
+        .btn-create {
+            background: linear-gradient(135deg, #bf1731 0%, #8f1225 100%);
+            border-color: #bf1731;
+            color: #ffffff;
+            box-shadow: 0 4px 15px rgba(191, 23, 49, 0.4);
+        }
+
+        .btn-create:hover {
+            background: linear-gradient(135deg, #d91d3a 0%, #bf1731 100%);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 30px rgba(191, 23, 49, 0.6);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        /* Progress Steps */
+        .progress-steps {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: rgba(21, 21, 21, 0.5);
+            border-radius: 10px;
+            border: 1px solid rgba(34, 50, 95, 0.3);
+        }
+
+        .step {
+            flex: 1;
+            height: 6px;
+            background: rgba(34, 50, 95, 0.5);
+            border-radius: 3px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .step.active {
+            background: #bf1731;
+            box-shadow: 0 0 10px rgba(191, 23, 49, 0.6);
+        }
+
+        .step.active::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 100%;
+            width: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            animation: shimmer 2s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        /* Helper Text */
+        .helper-text {
+            font-size: 12px;
+            color: #666666;
+            margin-top: 8px;
+            padding-left: 5px;
+            font-weight: 400;
+        }
+
+        .helper-text.error {
+            color: #bf1731;
+        }
+
+        /* Custom Height Slider */
+        .slider-container {
+            background: rgba(21, 21, 21, 0.6);
+            border: 2px solid rgba(34, 50, 95, 0.5);
+            border-radius: 10px;
+            padding: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .slider-container:hover {
+            border-color: rgba(191, 23, 49, 0.5);
+        }
+
+        .slider-value {
+            font-size: 32px;
+            font-weight: 900;
+            color: #bf1731;
+            text-align: center;
+            margin-bottom: 20px;
+            text-shadow: 0 0 20px rgba(191, 23, 49, 0.4);
+        }
+
+        .slider-wrapper {
+            position: relative;
+            padding: 10px 0;
+            height: 28px;
+            display: flex;
+            align-items: center;
+        }
+
+        .slider-track {
+            position: absolute;
+            left: 0;
+            right: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            height: 8px;
+            background: rgba(34, 50, 95, 0.5);
+            border-radius: 4px;
+            overflow: hidden;
+            pointer-events: none;
+        }
+
+        .slider-progress {
+            height: 100%;
+            background: linear-gradient(90deg, #bf1731 0%, #d91d3a 100%);
+            border-radius: 4px;
+            transition: width 0.2s ease;
+            box-shadow: 0 0 10px rgba(191, 23, 49, 0.6);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .slider-progress::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            animation: shimmerSlider 2s infinite;
+        }
+
+        @keyframes shimmerSlider {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        .height-slider {
+            width: 100%;
+            height: 28px;
+            -webkit-appearance: none;
+            appearance: none;
+            background: transparent;
+            outline: none;
+            position: absolute;
+            left: 0;
+            right: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 10;
+            cursor: pointer;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* Webkit (Chrome, Safari, Edge) */
+        .height-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 28px;
+            height: 28px;
+            background: linear-gradient(135deg, #bf1731 0%, #8f1225 100%);
+            border: 3px solid #ffffff;
+            border-radius: 50%;
+            cursor: grab;
+            box-shadow: 
+                0 0 0 4px rgba(191, 23, 49, 0.2),
+                0 4px 12px rgba(0, 0, 0, 0.6);
+            transition: all 0.3s ease;
+        }
+
+        .height-slider::-webkit-slider-thumb:hover {
+            transform: scale(1.15);
+            box-shadow: 
+                0 0 0 6px rgba(191, 23, 49, 0.3),
+                0 6px 20px rgba(191, 23, 49, 0.6);
+        }
+
+        .height-slider::-webkit-slider-thumb:active {
+            cursor: grabbing;
+            transform: scale(1.05);
+        }
+
+        /* Firefox */
+        .height-slider::-moz-range-thumb {
+            width: 22px;
+            height: 22px;
+            background: linear-gradient(135deg, #bf1731 0%, #8f1225 100%);
+            border: 3px solid #ffffff;
+            border-radius: 50%;
+            cursor: grab;
+            box-shadow: 
+                0 0 0 4px rgba(191, 23, 49, 0.2),
+                0 4px 12px rgba(0, 0, 0, 0.6);
+            transition: all 0.3s ease;
+        }
+
+        .height-slider::-moz-range-thumb:hover {
+            transform: scale(1.15);
+            box-shadow: 
+                0 0 0 6px rgba(191, 23, 49, 0.3),
+                0 6px 20px rgba(191, 23, 49, 0.6);
+        }
+
+        .height-slider::-moz-range-thumb:active {
+            cursor: grabbing;
+            transform: scale(1.05);
+        }
+
+        .height-slider::-moz-range-track {
+            background: transparent;
+            border: none;
+            height: 8px;
+        }
+
+        .height-slider::-moz-range-progress {
+            background: transparent;
+        }
+
+        .slider-markers {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 35px;
+            padding: 0;
+            width: 100%;
+            position: relative;
+        }
+
+        .marker {
+            font-size: 12px;
+            color: #666666;
+            font-weight: 700;
+            flex: 0 0 auto;
+        }
+
+        .marker:first-child {
+            color: #bf1731;
+        }
+
+        .marker:last-child {
+            color: #bf1731;
+        }
+
+        /* Responsive */
+        @media (max-width: 1400px) {
+            .character-preview {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="background-blur"></div>
+
+    <div class="main-container">
+        <!-- Creation Card -->
+        <div class="creation-card">
+            <!-- Header -->
+            <div class="card-header">
+                <div class="header-logo">🦅</div>
+                <div class="header-text">
+                    <div class="header-title">Brickston ©</div>
+                    <div class="header-subtitle">Création de personnage</div>
+                </div>
+            </div>
+
+            <!-- Body -->
+            <div class="card-body">
+                <!-- Progress Steps -->
+                <div class="progress-steps">
+                    <div class="step active"></div>
+                    <div class="step active"></div>
+                    <div class="step active"></div>
+                    <div class="step active"></div>
+                </div>
+
+                <!-- Gender Section -->
+                <div class="section-title">
+                    <div class="section-icon">⚧</div>
+                    Sexe
+                </div>
+
+                <div class="gender-selection">
+                    <div class="gender-option" id="male" onclick="selectGender('male')">
+                        <div class="gender-icon">👨</div>
+                        <div class="gender-label">Homme</div>
+                    </div>
+                    <div class="gender-option" id="female" onclick="selectGender('female')">
+                        <div class="gender-icon">👩</div>
+                        <div class="gender-label">Femme</div>
+                    </div>
+                </div>
+
+                <!-- Identity Section -->
+                <div class="section-title">
+                    <div class="section-icon">📋</div>
+                    Identité
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">
+                        Prénom
+                        <span class="required">*</span>
+                    </label>
+                    <input 
+                        type="text" 
+                        class="form-input" 
+                        id="firstName" 
+                        placeholder="Entrez votre prénom"
+                        maxlength="20"
+                        oninput="updatePreview()"
+                    >
+                    <div class="helper-text">2-20 caractères, lettres uniquement</div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">
+                        Nom
+                        <span class="required">*</span>
+                    </label>
+                    <input 
+                        type="text" 
+                        class="form-input" 
+                        id="lastName" 
+                        placeholder="Entrez votre nom"
+                        maxlength="20"
+                        oninput="updatePreview()"
+                    >
+                    <div class="helper-text">2-20 caractères, lettres uniquement</div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">
+                        Nationalité
+                        <span class="required">*</span>
+                    </label>
+                    <select class="form-input" id="nationality" onchange="updatePreview()">
+                        <option value="">Sélectionnez une nationalité</option>
+                        <option value="Français">Français</option>
+                        <option value="Américain">Américain</option>
+                        <option value="Anglais">Anglais</option>
+                        <option value="Allemand">Allemand</option>
+                        <option value="Italien">Italien</option>
+                        <option value="Espagnol">Espagnol</option>
+                        <option value="Canadien">Canadien</option>
+                        <option value="Belge">Belge</option>
+                        <option value="Suisse">Suisse</option>
+                        <option value="Portugais">Portugais</option>
+                        <option value="Russe">Russe</option>
+                        <option value="Japonais">Japonais</option>
+                        <option value="Chinois">Chinois</option>
+                        <option value="Brésilien">Brésilien</option>
+                        <option value="Mexicain">Mexicain</option>
+                        <option value="Australien">Australien</option>
+                        <option value="Indien">Indien</option>
+                        <option value="Turc">Turc</option>
+                        <option value="Autre">Autre</option>
+                    </select>
+                </div>
+
+                <!-- Physical Section -->
+                <div class="section-title">
+                    <div class="section-icon">📏</div>
+                    Caractéristiques
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">
+                        Taille (cm)
+                        <span class="required">*</span>
+                    </label>
+                    <div class="slider-container">
+                        <div class="slider-value" id="heightValue">175 cm</div>
+                        <div class="slider-wrapper">
+                            <input 
+                                type="range" 
+                                class="height-slider" 
+                                id="height" 
+                                min="140"
+                                max="220"
+                                value="175"
+                                oninput="updateHeightSlider(this.value)"
+                            >
+                            <div class="slider-track">
+                                <div class="slider-progress" id="sliderProgress"></div>
+                            </div>
+                            <div class="slider-markers">
+                                <span class="marker">140</span>
+                                <span class="marker">160</span>
+                                <span class="marker">180</span>
+                                <span class="marker">200</span>
+                                <span class="marker">220</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="helper-text">Entre 140 et 220 cm</div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">
+                        Date de naissance
+                        <span class="required">*</span>
+                    </label>
+                    <div class="date-grid">
+                        <select class="form-input" id="birthDay" onchange="updatePreview()">
+                            <option value="">Jour</option>
+                        </select>
+                        <select class="form-input" id="birthMonth" onchange="updatePreview()">
+                            <option value="">Mois</option>
+                            <option value="01">Janvier</option>
+                            <option value="02">Février</option>
+                            <option value="03">Mars</option>
+                            <option value="04">Avril</option>
+                            <option value="05">Mai</option>
+                            <option value="06">Juin</option>
+                            <option value="07">Juillet</option>
+                            <option value="08">Août</option>
+                            <option value="09">Septembre</option>
+                            <option value="10">Octobre</option>
+                            <option value="11">Novembre</option>
+                            <option value="12">Décembre</option>
+                        </select>
+                        <select class="form-input" id="birthYear" onchange="updatePreview()">
+                            <option value="">Année</option>
+                        </select>
+                    </div>
+                    <div class="helper-text">Vous devez avoir au moins 18 ans</div>
+                </div>
+
+                <!-- Buttons -->
+                <div class="action-buttons">
+                    <button class="btn btn-cancel" onclick="cancelCreation()">
+                        Annuler
+                    </button>
+                    <button class="btn btn-create" id="btnCreate" onclick="createCharacter()" disabled>
+                        Créer le personnage
+                    </button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // Variables globales
+        let selectedGender = null;
+        const characterData = {
+            gender: null,
+            firstName: '',
+            lastName: '',
+            nationality: '',
+            height: null,
+            birthDate: { day: '', month: '', year: '' }
+        };
+
+        // Initialisation
+        function init() {
+            // Remplir les jours (1-31)
+            const daySelect = document.getElementById('birthDay');
+            for (let i = 1; i <= 31; i++) {
+                const option = document.createElement('option');
+                option.value = i.toString().padStart(2, '0');
+                option.textContent = i;
+                daySelect.appendChild(option);
+            }
+
+            // Remplir les années (1950 - année actuelle - 18)
+            const yearSelect = document.getElementById('birthYear');
+            const currentYear = new Date().getFullYear();
+            const maxYear = currentYear - 18;
+            for (let i = maxYear; i >= 1950; i--) {
+                const option = document.createElement('option');
+                option.value = i;
+                option.textContent = i;
+                yearSelect.appendChild(option);
+            }
+        }
+
+        // Sélection du genre
+        function selectGender(gender) {
+            selectedGender = gender;
+            characterData.gender = gender;
+            
+            document.getElementById('male').classList.remove('selected');
+            document.getElementById('female').classList.remove('selected');
+            document.getElementById(gender).classList.add('selected');
+            
+            updatePreview();
+            validateForm();
+        }
+
+        // Mise à jour du slider de taille
+        function updateHeightSlider(value) {
+            const heightValue = document.getElementById('heightValue');
+            const sliderProgress = document.getElementById('sliderProgress');
+            
+            heightValue.textContent = value + ' cm';
+            
+            // Calculer le pourcentage (140-220 = 80 de range)
+            const percentage = ((value - 140) / 80) * 100;
+            sliderProgress.style.width = percentage + '%';
+            
+            updatePreview();
+        }
+
+        // Mise à jour de l'aperçu
+        function updatePreview() {
+            const firstName = document.getElementById('firstName').value;
+            const lastName = document.getElementById('lastName').value;
+            const nationality = document.getElementById('nationality').value;
+            const height = document.getElementById('height').value;
+            const day = document.getElementById('birthDay').value;
+            const month = document.getElementById('birthMonth').value;
+            const year = document.getElementById('birthYear').value;
+
+            // Mise à jour des données
+            characterData.firstName = firstName;
+            characterData.lastName = lastName;
+            characterData.nationality = nationality;
+            characterData.height = height;
+            characterData.birthDate = { day, month, year };
+
+            validateForm();
+        }
+
+        // Validation du formulaire
+        function validateForm() {
+            const firstName = document.getElementById('firstName').value.trim();
+            const lastName = document.getElementById('lastName').value.trim();
+            const nationality = document.getElementById('nationality').value;
+            const height = parseInt(document.getElementById('height').value);
+            const day = document.getElementById('birthDay').value;
+            const month = document.getElementById('birthMonth').value;
+            const year = document.getElementById('birthYear').value;
+
+            const isValid = 
+                selectedGender !== null &&
+                firstName.length >= 2 && firstName.length <= 20 &&
+                lastName.length >= 2 && lastName.length <= 20 &&
+                nationality !== '' &&
+                height >= 140 && height <= 220 &&
+                day !== '' && month !== '' && year !== '';
+
+            document.getElementById('btnCreate').disabled = !isValid;
+        }
+
+        // Création du personnage
+        function createCharacter() {
+            const data = {
+                gender: characterData.gender,
+                firstName: characterData.firstName,
+                lastName: characterData.lastName,
+                nationality: characterData.nationality,
+                height: characterData.height,
+                birthDate: `${characterData.birthDate.day}/${characterData.birthDate.month}/${characterData.birthDate.year}`
+            };
+
+            console.log('Création du personnage:', data);
+
+            // Animation
+            document.body.style.transition = 'opacity 0.5s';
+            document.body.style.opacity = '0';
+
+            setTimeout(() => {
+                // Appel NUI
+                fetch(`https://${GetParentResourceName()}/createCharacter`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+            }, 500);
+        }
+
+        // Annulation
+        function cancelCreation() {
+            if (confirm('Êtes-vous sûr de vouloir annuler la création ?')) {
+                document.body.style.opacity = '0';
+                setTimeout(() => {
+                    fetch(`https://${GetParentResourceName()}/cancelCreation`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({})
+                    });
+                }, 300);
+            }
+        }
+
+        function GetParentResourceName() {
+            return 'brickston_multichar';
+        }
+
+        // Navigation au clavier
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                cancelCreation();
+            }
+        });
+
+        // Validation temps réel sur les inputs
+        document.getElementById('firstName').addEventListener('input', (e) => {
+            e.target.value = e.target.value.replace(/[^a-zA-ZÀ-ÿ\s-]/g, '');
+        });
+
+        document.getElementById('lastName').addEventListener('input', (e) => {
+            e.target.value = e.target.value.replace(/[^a-zA-ZÀ-ÿ\s-]/g, '');
+        });
+
+        // Animation d'entrée
+        window.addEventListener('load', () => {
+            document.body.style.opacity = '0';
+            setTimeout(() => {
+                document.body.style.transition = 'opacity 0.5s';
+                document.body.style.opacity = '1';
+                init();
+                // Initialiser le slider
+                updateHeightSlider(175);
+            }, 100);
+        });
+    </script>
+</body>
+</html>
