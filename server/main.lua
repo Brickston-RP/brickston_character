@@ -1,9 +1,9 @@
 -- ════════════════════════════════════════════════════════════
 -- BRICKSTON CHARACTER - SERVER
--- Auto-insert / update dans la table `users`
+-- Auto-insert / update dans la table `users` (colonne identifier)
 -- ════════════════════════════════════════════════════════════
 
-local function GetPlayerLicense(source)
+local function GetPlayerIdentifier(source)
     local identifiers = GetPlayerIdentifiers(source)
     for _, id in ipairs(identifiers) do
         if string.find(id, 'license:') then
@@ -17,52 +17,30 @@ end
 -- AUTO-INSERT dans users à la connexion
 -- ════════════════════════════════════════════
 
--- S'assurer que le joueur a une entrée dans la table users
-local function EnsureUserExists(source)
-    local license = GetPlayerLicense(source)
-    if not license then return nil end
-
-    local exists = MySQL.scalar.await(
-        'SELECT COUNT(*) FROM users WHERE license = ?',
-        { license }
-    )
-
-    if exists == 0 then
-        MySQL.insert.await(
-            'INSERT INTO users (license, is_created) VALUES (?, 0)',
-            { license }
-        )
-        print(('[brickston_character] Nouveau joueur inséré dans users: %s (%s)'):format(GetPlayerName(source), license))
-    end
-
-    return license
-end
-
--- Auto-insert quand un joueur se connecte
 AddEventHandler('playerConnecting', function(name, setKickReason, deferrals)
     local source = source
     deferrals.defer()
     Wait(0)
     deferrals.update('Vérification du compte...')
 
-    local license = GetPlayerLicense(source)
-    if not license then
-        deferrals.done('Impossible de récupérer votre licence. Relancez FiveM.')
+    local identifier = GetPlayerIdentifier(source)
+    if not identifier then
+        deferrals.done('Impossible de récupérer votre identifiant. Relancez FiveM.')
         return
     end
 
-    -- Auto-insert dans la table users
+    -- Auto-insert dans la table users si le joueur n'existe pas
     local exists = MySQL.scalar.await(
-        'SELECT COUNT(*) FROM users WHERE license = ?',
-        { license }
+        'SELECT COUNT(*) FROM users WHERE identifier = ?',
+        { identifier }
     )
 
     if exists == 0 then
         MySQL.insert.await(
-            'INSERT INTO users (license, is_created) VALUES (?, 0)',
-            { license }
+            'INSERT INTO users (identifier, is_created) VALUES (?, 0)',
+            { identifier }
         )
-        print(('[brickston_character] Nouveau joueur: %s (%s)'):format(name, license))
+        print(('[brickston_character] Nouveau joueur: %s (%s)'):format(name, identifier))
     end
 
     deferrals.done()
@@ -74,12 +52,12 @@ end)
 
 -- Vérifier si le joueur a déjà créé un personnage
 lib.callback.register('brickston_character:hasCharacter', function(source)
-    local license = GetPlayerLicense(source)
-    if not license then return false end
+    local identifier = GetPlayerIdentifier(source)
+    if not identifier then return false end
 
     local isCreated = MySQL.scalar.await(
-        'SELECT is_created FROM users WHERE license = ?',
-        { license }
+        'SELECT is_created FROM users WHERE identifier = ?',
+        { identifier }
     )
 
     return isCreated == 1
@@ -87,12 +65,12 @@ end)
 
 -- Récupérer les données du personnage
 lib.callback.register('brickston_character:getCharacter', function(source)
-    local license = GetPlayerLicense(source)
-    if not license then return nil end
+    local identifier = GetPlayerIdentifier(source)
+    if not identifier then return nil end
 
     local character = MySQL.single.await(
-        'SELECT sexe, firstname, lastname, nationality, height, birthdate, skin, position, last_played FROM users WHERE license = ? AND is_created = 1',
-        { license }
+        'SELECT sexe, firstname, lastname, nationality, height, birthdate, skin, position, last_played FROM users WHERE identifier = ? AND is_created = 1',
+        { identifier }
     )
 
     return character
@@ -104,12 +82,12 @@ end)
 
 RegisterNetEvent('brickston_character:createCharacter', function(data)
     local source = source
-    local license = GetPlayerLicense(source)
+    local identifier = GetPlayerIdentifier(source)
 
-    if not license then
+    if not identifier then
         TriggerClientEvent('ox_lib:notify', source, {
             title = 'Erreur',
-            description = 'Impossible de récupérer votre licence.',
+            description = 'Impossible de récupérer votre identifiant.',
             type = 'error',
         })
         return
@@ -117,8 +95,8 @@ RegisterNetEvent('brickston_character:createCharacter', function(data)
 
     -- Vérifier si le personnage existe déjà
     local isCreated = MySQL.scalar.await(
-        'SELECT is_created FROM users WHERE license = ?',
-        { license }
+        'SELECT is_created FROM users WHERE identifier = ?',
+        { identifier }
     )
 
     if isCreated == 1 then
@@ -171,10 +149,10 @@ RegisterNetEvent('brickston_character:createCharacter', function(data)
         w = Config.DefaultSpawn.w,
     })
 
-    -- UPDATE la ligne existante dans users (auto-insert fait à la connexion)
+    -- UPDATE la ligne existante dans users
     MySQL.update.await(
-        'UPDATE users SET sexe = ?, firstname = ?, lastname = ?, nationality = ?, height = ?, birthdate = ?, position = ?, last_played = NOW(), is_created = 1 WHERE license = ?',
-        { data.gender, firstName, lastName, data.nationality, height, data.birthDate, defaultPos, license }
+        'UPDATE users SET sexe = ?, firstname = ?, lastname = ?, nationality = ?, height = ?, birthdate = ?, position = ?, last_played = NOW(), is_created = 1 WHERE identifier = ?',
+        { data.gender, firstName, lastName, data.nationality, height, data.birthDate, defaultPos, identifier }
     )
 
     TriggerClientEvent('ox_lib:notify', source, {
@@ -185,7 +163,7 @@ RegisterNetEvent('brickston_character:createCharacter', function(data)
 
     -- Notifier le client que la création est terminée
     TriggerClientEvent('brickston_character:characterCreated', source, {
-        license = license,
+        identifier = identifier,
         gender = data.gender,
         firstName = firstName,
         lastName = lastName,
@@ -203,13 +181,13 @@ end)
 
 RegisterNetEvent('brickston_character:loadCharacter', function()
     local source = source
-    local license = GetPlayerLicense(source)
+    local identifier = GetPlayerIdentifier(source)
 
-    if not license then return end
+    if not identifier then return end
 
     local character = MySQL.single.await(
-        'SELECT sexe, firstname, lastname, nationality, height, birthdate, skin, position, last_played FROM users WHERE license = ? AND is_created = 1',
-        { license }
+        'SELECT sexe, firstname, lastname, nationality, height, birthdate, skin, position, last_played FROM users WHERE identifier = ? AND is_created = 1',
+        { identifier }
     )
 
     if not character then
@@ -223,8 +201,8 @@ RegisterNetEvent('brickston_character:loadCharacter', function()
 
     -- Mettre à jour la date de dernière connexion
     MySQL.update.await(
-        'UPDATE users SET last_played = NOW() WHERE license = ?',
-        { license }
+        'UPDATE users SET last_played = NOW() WHERE identifier = ?',
+        { identifier }
     )
 
     -- Envoyer les données au client pour le spawn
@@ -241,8 +219,8 @@ end)
 
 RegisterNetEvent('brickston_character:savePosition', function(coords)
     local source = source
-    local license = GetPlayerLicense(source)
-    if not license or not coords then return end
+    local identifier = GetPlayerIdentifier(source)
+    if not identifier or not coords then return end
 
     local pos = json.encode({
         x = coords.x,
@@ -251,7 +229,7 @@ RegisterNetEvent('brickston_character:savePosition', function(coords)
         w = coords.w or 0.0,
     })
 
-    MySQL.update('UPDATE users SET position = ? WHERE license = ?', { pos, license })
+    MySQL.update('UPDATE users SET position = ? WHERE identifier = ?', { pos, identifier })
 end)
 
 -- ════════════════════════════════════════════
@@ -260,11 +238,11 @@ end)
 
 RegisterNetEvent('brickston_character:saveSkin', function(skinData)
     local source = source
-    local license = GetPlayerLicense(source)
-    if not license or not skinData then return end
+    local identifier = GetPlayerIdentifier(source)
+    if not identifier or not skinData then return end
 
     local skin = json.encode(skinData)
-    MySQL.update('UPDATE users SET skin = ? WHERE license = ?', { skin, license })
+    MySQL.update('UPDATE users SET skin = ? WHERE identifier = ?', { skin, identifier })
 end)
 
 -- ════════════════════════════════════════════
