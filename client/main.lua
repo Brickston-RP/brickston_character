@@ -1,7 +1,7 @@
 local isCreatorOpen = false
 local creatorCam = nil
 local creatorPed = nil
-local currentCitizenId = nil
+local characterLoaded = false
 
 -- ════════════════════════════════════════════
 -- UTILS
@@ -181,14 +181,7 @@ RegisterNetEvent('brickston_character:characterCreated', function(data)
     SetEntityCoords(ped, coords.x, coords.y, coords.z, false, false, false, true)
     SetEntityHeading(ped, coords.w)
 
-    -- Appliquer la taille (scale du ped)
-    if data.height then
-        local scale = data.height / 175.0
-        -- Clamp entre 0.8 et 1.2
-        scale = math.max(0.8, math.min(1.2, scale))
-    end
-
-    currentCitizenId = data.citizenid
+    characterLoaded = true
 
     DoScreenFadeIn(Config.FadeDuration)
 
@@ -202,7 +195,7 @@ RegisterNetEvent('brickston_character:spawnCharacter', function(character)
     DoScreenFadeOut(Config.FadeDuration)
     Wait(Config.FadeDuration)
 
-    local model = character.gender == 'female' and Config.FemaleModel or Config.MaleModel
+    local model = character.sexe == 'female' and Config.FemaleModel or Config.MaleModel
     LoadModel(model)
     SetPlayerModel(PlayerId(), model)
     SetModelAsNoLongerNeeded(model)
@@ -229,28 +222,19 @@ RegisterNetEvent('brickston_character:spawnCharacter', function(character)
         end
     end
 
-    currentCitizenId = character.citizenid
+    characterLoaded = true
 
     DoScreenFadeIn(Config.FadeDuration)
     DisplayRadar(true)
     DisplayHud(true)
 
     TriggerEvent('brickston_character:onCharacterLoaded', {
-        citizenid = character.citizenid,
-        gender = character.gender,
+        sexe = character.sexe,
         firstName = character.firstname,
         lastName = character.lastname,
         nationality = character.nationality,
         height = character.height,
         birthDate = character.birthdate,
-    })
-end)
-
--- Rafraîchir la liste des personnages
-RegisterNetEvent('brickston_character:refreshCharacters', function(characters)
-    SendNUIMessage({
-        action = 'updateCharacters',
-        characters = characters,
     })
 end)
 
@@ -263,7 +247,7 @@ RegisterCommand('charcreator', function()
 end, false)
 
 RegisterCommand('logout', function()
-    currentCitizenId = nil
+    characterLoaded = false
     DoScreenFadeOut(Config.FadeDuration)
     Wait(Config.FadeDuration)
     OpenCreator()
@@ -277,11 +261,11 @@ end, false)
 CreateThread(function()
     while true do
         Wait(300000) -- 5 minutes
-        if currentCitizenId then
+        if characterLoaded then
             local ped = PlayerPedId()
             local coords = GetEntityCoords(ped)
             local heading = GetEntityHeading(ped)
-            TriggerServerEvent('brickston_character:savePosition', currentCitizenId, {
+            TriggerServerEvent('brickston_character:savePosition', {
                 x = coords.x,
                 y = coords.y,
                 z = coords.z,
@@ -294,11 +278,11 @@ end)
 -- Sauvegarde à la déconnexion
 AddEventHandler('onResourceStop', function(resource)
     if resource == GetCurrentResourceName() then
-        if currentCitizenId then
+        if characterLoaded then
             local ped = PlayerPedId()
             local coords = GetEntityCoords(ped)
             local heading = GetEntityHeading(ped)
-            TriggerServerEvent('brickston_character:savePosition', currentCitizenId, {
+            TriggerServerEvent('brickston_character:savePosition', {
                 x = coords.x,
                 y = coords.y,
                 z = coords.z,
@@ -317,13 +301,22 @@ AddEventHandler('onClientResourceStart', function(resource)
     if resource == GetCurrentResourceName() then
         Wait(1000)
         DoScreenFadeOut(0)
-        OpenCreator()
+
+        -- Vérifier si le joueur a déjà un personnage
+        local hasChar = lib.callback.await('brickston_character:hasCharacter', false)
+        if hasChar then
+            -- Charger le personnage existant
+            TriggerServerEvent('brickston_character:loadCharacter')
+        else
+            -- Ouvrir le créateur
+            OpenCreator()
+        end
     end
 end)
 
 -- Export pour d'autres resources
-exports('GetCurrentCitizenId', function()
-    return currentCitizenId
+exports('IsCharacterLoaded', function()
+    return characterLoaded
 end)
 
 exports('OpenCharacterCreator', function()
