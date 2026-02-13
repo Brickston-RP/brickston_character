@@ -120,6 +120,25 @@
             z-index: 1;
         }
 
+        .icon-img {
+            filter: brightness(0) invert(1);
+        }
+
+        .icon-logo {
+            width: 40px;
+            height: 40px;
+        }
+
+        .icon-section {
+            width: 20px;
+            height: 20px;
+        }
+
+        .icon-gender {
+            width: 48px;
+            height: 48px;
+        }
+
         .header-text {
             flex: 1;
             position: relative;
@@ -649,7 +668,7 @@
         <div class="creation-card">
             <!-- Header -->
             <div class="card-header">
-                <div class="header-logo">🦅</div>
+                <div class="header-logo"><img src="logo.png" alt="Logo" class="icon-logo"></div>
                 <div class="header-text">
                     <div class="header-title">Brickston ©</div>
                     <div class="header-subtitle">Création de personnage</div>
@@ -668,24 +687,24 @@
 
                 <!-- Gender Section -->
                 <div class="section-title">
-                    <div class="section-icon">⚧</div>
+                    <div class="section-icon"><img src="https://cdn-icons-png.flaticon.com/512/8511/8511843.png" alt="Gender" class="icon-img icon-section"></div>
                     Sexe
                 </div>
 
                 <div class="gender-selection">
                     <div class="gender-option" id="male" onclick="selectGender('male')">
-                        <div class="gender-icon">👨</div>
+                        <div class="gender-icon"><img src="https://cdn-icons-png.flaticon.com/512/30/30712.png" alt="Man" class="icon-img icon-gender"></div>
                         <div class="gender-label">Homme</div>
                     </div>
                     <div class="gender-option" id="female" onclick="selectGender('female')">
-                        <div class="gender-icon">👩</div>
+                        <div class="gender-icon"><img src="https://cdn-icons-png.flaticon.com/512/56/56863.png" alt="Woman" class="icon-img icon-gender"></div>
                         <div class="gender-label">Femme</div>
                     </div>
                 </div>
 
                 <!-- Identity Section -->
                 <div class="section-title">
-                    <div class="section-icon">📋</div>
+                    <div class="section-icon"><img src="https://cdn-icons-png.flaticon.com/512/3596/3596096.png" alt="Clipboard" class="icon-img icon-section"></div>
                     Identité
                 </div>
 
@@ -752,7 +771,7 @@
 
                 <!-- Physical Section -->
                 <div class="section-title">
-                    <div class="section-icon">📏</div>
+                    <div class="section-icon"><img src="https://cdn-icons-png.flaticon.com/512/73/73533.png" alt="Ruler" class="icon-img icon-section"></div>
                     Caractéristiques
                 </div>
 
