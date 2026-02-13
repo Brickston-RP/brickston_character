@@ -69,7 +69,7 @@ lib.callback.register('brickston_character:getCharacter', function(source)
     if not identifier then return nil end
 
     local character = MySQL.single.await(
-        'SELECT sexe, firstname, lastname, nationality, height, birthdate, skin, position, last_played FROM users WHERE identifier = ? AND is_created = 1',
+        'SELECT sex, firstname, lastname, nationality, height, dateofbirth, skin, position, last_played FROM users WHERE identifier = ? AND is_created = 1',
         { identifier }
     )
 
@@ -151,7 +151,7 @@ RegisterNetEvent('brickston_character:createCharacter', function(data)
 
     -- UPDATE la ligne existante dans users
     MySQL.update.await(
-        'UPDATE users SET sexe = ?, firstname = ?, lastname = ?, nationality = ?, height = ?, birthdate = ?, position = ?, last_played = NOW(), is_created = 1 WHERE identifier = ?',
+        'UPDATE users SET sex = ?, firstname = ?, lastname = ?, nationality = ?, height = ?, dateofbirth = ?, position = ?, last_played = NOW(), is_created = 1 WHERE identifier = ?',
         { data.gender, firstName, lastName, data.nationality, height, data.birthDate, defaultPos, identifier }
     )
 
@@ -186,7 +186,7 @@ RegisterNetEvent('brickston_character:loadCharacter', function()
     if not identifier then return end
 
     local character = MySQL.single.await(
-        'SELECT sexe, firstname, lastname, nationality, height, birthdate, skin, position, last_played FROM users WHERE identifier = ? AND is_created = 1',
+        'SELECT sex, firstname, lastname, nationality, height, dateofbirth, skin, position, last_played FROM users WHERE identifier = ? AND is_created = 1',
         { identifier }
     )
 
