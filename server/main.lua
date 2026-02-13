@@ -30,7 +30,7 @@ lib.callback.register('brickston_character:hasCharacter', function(source)
         { identifier }
     )
 
-    return isCreated == 1
+    return (tonumber(isCreated) or 0) == 1
 end)
 
 -- Récupérer les données du personnage
