@@ -29,6 +29,7 @@ files {
 }
 
 dependencies {
+    'es_extended',
     'oxmysql',
     'ox_lib',
 }

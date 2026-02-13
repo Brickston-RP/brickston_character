@@ -936,7 +936,7 @@
             document.getElementById(gender).classList.add('selected');
 
             // Notifier le client Lua pour changer le ped
-            fetch(`https://${GetParentResourceName()}/selectGender`, {
+            fetch(`https://${_resourceName}/selectGender`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ gender: gender })
@@ -1025,7 +1025,7 @@
             document.body.style.opacity = '0';
 
             setTimeout(() => {
-                fetch(`https://${GetParentResourceName()}/createCharacter`, {
+                fetch(`https://${_resourceName}/createCharacter`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(data)
@@ -1040,7 +1040,7 @@
             document.body.style.transition = 'opacity 0.3s';
             document.body.style.opacity = '0';
             setTimeout(() => {
-                fetch(`https://${GetParentResourceName()}/cancelCreation`, {
+                fetch(`https://${_resourceName}/cancelCreation`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({})
@@ -1049,14 +1049,11 @@
         }
 
         // ════════════════════════════════════════════
-        // NUI RESOURCE NAME
+        // NUI RESOURCE NAME (native FiveM, fallback hardcodé)
         // ════════════════════════════════════════════
-        function GetParentResourceName() {
-            if (window.invokeNative) {
-                return window.GetParentResourceName ? window.GetParentResourceName() : 'brickston_character';
-            }
-            return 'brickston_character';
-        }
+        const _resourceName = (typeof GetParentResourceName === 'function')
+            ? GetParentResourceName()
+            : 'brickston_character';
 
         // ════════════════════════════════════════════
         // KEYBOARD / INPUT

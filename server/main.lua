@@ -5,6 +5,8 @@
 -- on ne fait que lire/modifier les colonnes character creator.
 -- ════════════════════════════════════════════════════════════
 
+ESX = exports['es_extended']:getSharedObject()
+
 -- Récupère l'identifier ESX du joueur (sans préfixe license:)
 local function GetESXIdentifier(source)
     local xPlayer = ESX.GetPlayerFromId(source)
