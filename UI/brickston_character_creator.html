@@ -14,7 +14,7 @@
 
         body {
             font-family: 'ABC Ginto Nord', 'Bebas Neue', 'Impact', sans-serif;
-            background: #151515;
+            background: transparent;
             color: #ffffff;
             overflow: hidden;
             height: 100vh;
@@ -864,6 +864,7 @@
 
         function showCreator() {
             document.querySelector('.main-container').style.display = 'flex';
+            document.querySelector('.background-blur').style.display = 'block';
             document.body.style.transition = 'opacity 0.5s';
             document.body.style.opacity = '1';
             resetForm();
@@ -874,6 +875,7 @@
             document.body.style.opacity = '0';
             setTimeout(() => {
                 document.querySelector('.main-container').style.display = 'none';
+                document.querySelector('.background-blur').style.display = 'none';
             }, 500);
         }
 
@@ -1078,6 +1080,7 @@
         window.addEventListener('load', () => {
             document.body.style.opacity = '0';
             document.querySelector('.main-container').style.display = 'none';
+            document.querySelector('.background-blur').style.display = 'none';
             init();
             updateHeightSlider(175);
         });
