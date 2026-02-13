@@ -195,7 +195,7 @@ RegisterNetEvent('brickston_character:spawnCharacter', function(character)
     DoScreenFadeOut(Config.FadeDuration)
     Wait(Config.FadeDuration)
 
-    local model = character.sexe == 'female' and Config.FemaleModel or Config.MaleModel
+    local model = character.sex == 'female' and Config.FemaleModel or Config.MaleModel
     LoadModel(model)
     SetPlayerModel(PlayerId(), model)
     SetModelAsNoLongerNeeded(model)
@@ -229,12 +229,12 @@ RegisterNetEvent('brickston_character:spawnCharacter', function(character)
     DisplayHud(true)
 
     TriggerEvent('brickston_character:onCharacterLoaded', {
-        sexe = character.sexe,
+        sex = character.sex,
         firstName = character.firstname,
         lastName = character.lastname,
         nationality = character.nationality,
         height = character.height,
-        birthDate = character.birthdate,
+        birthDate = character.dateofbirth,
     })
 end)
 
@@ -294,21 +294,39 @@ AddEventHandler('onResourceStop', function(resource)
 end)
 
 -- ════════════════════════════════════════════
--- AUTO-OPEN AU SPAWN
+-- AUTO-OPEN AU SPAWN (utilise l'event ESX)
 -- ════════════════════════════════════════════
 
+-- Quand ESX a fini de charger le joueur
+RegisterNetEvent('esx:playerLoaded', function(xPlayer)
+    DoScreenFadeOut(0)
+
+    -- Vérifier si le joueur a déjà un personnage
+    local hasChar = lib.callback.await('brickston_character:hasCharacter', false)
+    if hasChar then
+        -- Charger le personnage existant
+        TriggerServerEvent('brickston_character:loadCharacter')
+    else
+        -- Ouvrir le créateur
+        OpenCreator()
+    end
+end)
+
+-- Fallback si la resource est restart en cours de jeu
 AddEventHandler('onClientResourceStart', function(resource)
     if resource == GetCurrentResourceName() then
+        -- Attendre qu'ESX soit prêt
+        local ESX = exports['es_extended']:getSharedObject()
+        local playerData = ESX.GetPlayerData()
+        if not playerData or not playerData.identifier then return end
+
         Wait(1000)
         DoScreenFadeOut(0)
 
-        -- Vérifier si le joueur a déjà un personnage
         local hasChar = lib.callback.await('brickston_character:hasCharacter', false)
         if hasChar then
-            -- Charger le personnage existant
             TriggerServerEvent('brickston_character:loadCharacter')
         else
-            -- Ouvrir le créateur
             OpenCreator()
         end
     end
