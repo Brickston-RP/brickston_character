@@ -1,50 +1,18 @@
 -- ════════════════════════════════════════════════════════════
 -- BRICKSTON CHARACTER - SERVER
--- Auto-insert / update dans la table `users` (colonne identifier)
+-- Update dans la table `users` (gérée par ESX)
+-- ESX crée déjà la ligne dans users à la connexion,
+-- on ne fait que lire/modifier les colonnes character creator.
 -- ════════════════════════════════════════════════════════════
 
-local function GetPlayerIdentifier(source)
-    local identifiers = GetPlayerIdentifiers(source)
-    for _, id in ipairs(identifiers) do
-        if string.find(id, 'license:') then
-            return id
-        end
+-- Récupère l'identifier ESX du joueur (sans préfixe license:)
+local function GetESXIdentifier(source)
+    local xPlayer = ESX.GetPlayerFromId(source)
+    if xPlayer then
+        return xPlayer.identifier
     end
     return nil
 end
-
--- ════════════════════════════════════════════
--- AUTO-INSERT dans users à la connexion
--- ════════════════════════════════════════════
-
-AddEventHandler('playerConnecting', function(name, setKickReason, deferrals)
-    local source = source
-    deferrals.defer()
-    Wait(0)
-    deferrals.update('Vérification du compte...')
-
-    local identifier = GetPlayerIdentifier(source)
-    if not identifier then
-        deferrals.done('Impossible de récupérer votre identifiant. Relancez FiveM.')
-        return
-    end
-
-    -- Auto-insert dans la table users si le joueur n'existe pas
-    local exists = MySQL.scalar.await(
-        'SELECT COUNT(*) FROM users WHERE identifier = ?',
-        { identifier }
-    )
-
-    if exists == 0 then
-        MySQL.insert.await(
-            'INSERT INTO users (identifier, is_created) VALUES (?, 0)',
-            { identifier }
-        )
-        print(('[brickston_character] Nouveau joueur: %s (%s)'):format(name, identifier))
-    end
-
-    deferrals.done()
-end)
 
 -- ════════════════════════════════════════════
 -- CALLBACKS
@@ -52,7 +20,7 @@ end)
 
 -- Vérifier si le joueur a déjà créé un personnage
 lib.callback.register('brickston_character:hasCharacter', function(source)
-    local identifier = GetPlayerIdentifier(source)
+    local identifier = GetESXIdentifier(source)
     if not identifier then return false end
 
     local isCreated = MySQL.scalar.await(
@@ -65,7 +33,7 @@ end)
 
 -- Récupérer les données du personnage
 lib.callback.register('brickston_character:getCharacter', function(source)
-    local identifier = GetPlayerIdentifier(source)
+    local identifier = GetESXIdentifier(source)
     if not identifier then return nil end
 
     local character = MySQL.single.await(
@@ -82,7 +50,7 @@ end)
 
 RegisterNetEvent('brickston_character:createCharacter', function(data)
     local source = source
-    local identifier = GetPlayerIdentifier(source)
+    local identifier = GetESXIdentifier(source)
 
     if not identifier then
         TriggerClientEvent('ox_lib:notify', source, {
@@ -149,7 +117,7 @@ RegisterNetEvent('brickston_character:createCharacter', function(data)
         w = Config.DefaultSpawn.w,
     })
 
-    -- UPDATE la ligne existante dans users
+    -- UPDATE la ligne existante dans users (créée par ESX)
     MySQL.update.await(
         'UPDATE users SET sex = ?, firstname = ?, lastname = ?, nationality = ?, height = ?, dateofbirth = ?, position = ?, last_played = NOW(), is_created = 1 WHERE identifier = ?',
         { data.gender, firstName, lastName, data.nationality, height, data.birthDate, defaultPos, identifier }
@@ -181,7 +149,7 @@ end)
 
 RegisterNetEvent('brickston_character:loadCharacter', function()
     local source = source
-    local identifier = GetPlayerIdentifier(source)
+    local identifier = GetESXIdentifier(source)
 
     if not identifier then return end
 
@@ -219,7 +187,7 @@ end)
 
 RegisterNetEvent('brickston_character:savePosition', function(coords)
     local source = source
-    local identifier = GetPlayerIdentifier(source)
+    local identifier = GetESXIdentifier(source)
     if not identifier or not coords then return end
 
     local pos = json.encode({
@@ -238,7 +206,7 @@ end)
 
 RegisterNetEvent('brickston_character:saveSkin', function(skinData)
     local source = source
-    local identifier = GetPlayerIdentifier(source)
+    local identifier = GetESXIdentifier(source)
     if not identifier or not skinData then return end
 
     local skin = json.encode(skinData)
