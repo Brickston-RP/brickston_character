@@ -257,3 +257,28 @@ box-shadow:0 10px 22px var(--primary-glow);
 .primary:hover{
 transform:translateY(-2px);
 }
+
+/* cancel button */
+
+.cancel-btn{
+background:rgba(255,255,255,.05);
+border:1px solid var(--border);
+}
+
+.cancel-btn:hover{
+background:rgba(255,255,255,.1);
+transform:translateY(-1px);
+}
+
+/* shake animation (validation) */
+
+@keyframes shake{
+0%,100%{transform:translateX(0);}
+20%,60%{transform:translateX(-6px);}
+40%,80%{transform:translateX(6px);}
+}
+
+.shake{
+animation:shake .4s ease;
+border-color:var(--primary) !important;
+}

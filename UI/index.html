@@ -20,7 +20,7 @@ href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
 
 <body>
 
-<div class="identity-card">
+<div id="creator-container" class="identity-card" style="display:none;">
 
 <!-- HEADER -->
 
@@ -47,7 +47,7 @@ Création personnage
 
 <div class="field-box">
 <i class="fa-solid fa-user"></i>
-<input type="text" placeholder="John">
+<input id="input-firstname" type="text" placeholder="John" maxlength="20">
 </div>
 </div>
 
@@ -58,7 +58,7 @@ Création personnage
 
 <div class="field-box">
 <i class="fa-solid fa-id-card"></i>
-<input type="text" placeholder="Doe">
+<input id="input-lastname" type="text" placeholder="Doe" maxlength="20">
 </div>
 </div>
 
@@ -69,7 +69,7 @@ Création personnage
 
 <div class="field-box">
 <i class="fa-solid fa-calendar-days"></i>
-<input type="text" placeholder="JJ / MM / AAAA">
+<input id="input-birthdate" type="text" placeholder="JJ / MM / AAAA" maxlength="14">
 </div>
 </div>
 
@@ -91,7 +91,7 @@ Création personnage
 
 <div class="gender-row">
 
-<button class="gender-btn active">
+<button class="gender-btn active" data-gender="male">
 <div class="icon-square">
 <i class="fa-solid fa-person"></i>
 </div>
@@ -102,7 +102,7 @@ Création personnage
 </div>
 </button>
 
-<button class="gender-btn">
+<button class="gender-btn" data-gender="female">
 <div class="icon-square">
 <i class="fa-solid fa-person-dress"></i>
 </div>
@@ -121,7 +121,7 @@ Création personnage
 <div class="field">
 <div class="field-label">NATIONALITÉ</div>
 
-<div class="dropdown">
+<div class="dropdown" id="dropdown-nationality">
 
 <div class="dropdown-selected">
 <i class="fa-solid fa-flag"></i>
@@ -142,9 +142,9 @@ Création personnage
 </div>
 </div>
 
-<!-- bouton -->
+<!-- bouton créer -->
 
-<button class="action-btn primary big">
+<button id="btn-create" class="action-btn primary big">
 
 <div class="icon-square">
 <i class="fa-solid fa-check"></i>
@@ -153,6 +153,21 @@ Création personnage
 <div class="btn-text">
 <div class="btn-title">Créer votre personnage</div>
 <div class="btn-sub">Valider les informations</div>
+</div>
+
+</button>
+
+<!-- bouton annuler -->
+
+<button id="btn-cancel" class="action-btn cancel-btn">
+
+<div class="icon-square">
+<i class="fa-solid fa-xmark"></i>
+</div>
+
+<div class="btn-text">
+<div class="btn-title">Annuler</div>
+<div class="btn-sub">Retour</div>
 </div>
 
 </button>
