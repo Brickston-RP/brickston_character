@@ -30,7 +30,7 @@ lib.callback.register('brickston_character:hasCharacter', function(source)
         { identifier }
     )
 
-    return isCreated == 1
+    return (tonumber(isCreated) or 0) == 1
 end)
 
 -- Récupérer les données du personnage
@@ -69,7 +69,7 @@ RegisterNetEvent('brickston_character:createCharacter', function(data)
         { identifier }
     )
 
-    if isCreated == 1 then
+    if (tonumber(isCreated) or 0) == 1 then
         TriggerClientEvent('ox_lib:notify', source, {
             title = 'Erreur',
             description = 'Vous avez déjà créé un personnage.',
@@ -166,6 +166,8 @@ RegisterNetEvent('brickston_character:loadCharacter', function()
             description = 'Aucun personnage trouvé. Veuillez en créer un.',
             type = 'error',
         })
+        -- Ouvrir le créateur au lieu de laisser le joueur sur écran noir
+        TriggerClientEvent('brickston_character:openCreator', source)
         return
     end
 

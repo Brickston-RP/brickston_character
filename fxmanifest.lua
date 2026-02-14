@@ -26,6 +26,7 @@ ui_page 'UI/brickston_character_creator.html'
 
 files {
     'UI/brickston_character_creator.html',
+    'UI/logo.png',
 }
 
 dependencies {

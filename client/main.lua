@@ -2,6 +2,7 @@ local isCreatorOpen = false
 local creatorCam = nil
 local creatorPed = nil
 local characterLoaded = false
+local isCheckingCharacter = false
 
 -- ════════════════════════════════════════════
 -- UTILS
@@ -238,6 +239,13 @@ RegisterNetEvent('brickston_character:spawnCharacter', function(character)
     })
 end)
 
+-- Fallback : le serveur demande d'ouvrir le créateur (aucun personnage trouvé)
+RegisterNetEvent('brickston_character:openCreator', function()
+    isCheckingCharacter = false
+    characterLoaded = false
+    OpenCreator()
+end)
+
 -- ════════════════════════════════════════════
 -- COMMANDES (DEV)
 -- ════════════════════════════════════════════
@@ -297,39 +305,53 @@ end)
 -- AUTO-OPEN AU SPAWN (utilise l'event ESX)
 -- ════════════════════════════════════════════
 
--- Quand ESX a fini de charger le joueur
-RegisterNetEvent('esx:playerLoaded', function(xPlayer)
+-- Vérifie le personnage avec retries (le serveur peut ne pas être prêt après un restart)
+local function CheckAndHandleCharacter()
+    if isCheckingCharacter or characterLoaded then return end
+    isCheckingCharacter = true
+
     DoScreenFadeOut(0)
 
-    -- Vérifier si le joueur a déjà un personnage
-    local hasChar = lib.callback.await('brickston_character:hasCharacter', false)
+    -- Retry jusqu'à 5 fois (laisse le temps au serveur d'enregistrer ses callbacks)
+    local hasChar = nil
+    for i = 1, 5 do
+        local ok, result = pcall(lib.callback.await, 'brickston_character:hasCharacter', false)
+        if ok and result ~= nil then
+            hasChar = result
+            break
+        end
+        Wait(2000)
+    end
+
     if hasChar then
-        -- Charger le personnage existant
         TriggerServerEvent('brickston_character:loadCharacter')
     else
-        -- Ouvrir le créateur
         OpenCreator()
     end
+
+    isCheckingCharacter = false
+end
+
+-- Quand ESX a fini de charger le joueur (connexion / reconnexion)
+RegisterNetEvent('esx:playerLoaded', function(xPlayer)
+    characterLoaded = false
+    CheckAndHandleCharacter()
 end)
 
 -- Fallback si la resource est restart en cours de jeu
 AddEventHandler('onClientResourceStart', function(resource)
-    if resource == GetCurrentResourceName() then
-        -- Attendre qu'ESX soit prêt
-        local ESX = exports['es_extended']:getSharedObject()
-        local playerData = ESX.GetPlayerData()
-        if not playerData or not playerData.identifier then return end
+    if resource ~= GetCurrentResourceName() then return end
 
-        Wait(1000)
-        DoScreenFadeOut(0)
+    -- Attendre que le serveur soit prêt
+    Wait(2000)
 
-        local hasChar = lib.callback.await('brickston_character:hasCharacter', false)
-        if hasChar then
-            TriggerServerEvent('brickston_character:loadCharacter')
-        else
-            OpenCreator()
-        end
-    end
+    -- Vérifier qu'ESX a chargé le joueur
+    local ESX = exports['es_extended']:getSharedObject()
+    local playerData = ESX.GetPlayerData()
+    if not playerData or not next(playerData) then return end
+
+    characterLoaded = false
+    CheckAndHandleCharacter()
 end)
 
 -- Export pour d'autres resources
