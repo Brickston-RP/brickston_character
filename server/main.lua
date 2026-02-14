@@ -25,12 +25,12 @@ lib.callback.register('brickston_character:hasCharacter', function(source)
     local identifier = GetESXIdentifier(source)
     if not identifier then return false end
 
-    local isCreated = MySQL.scalar.await(
-        'SELECT is_created FROM users WHERE identifier = ?',
+    local firstname = MySQL.scalar.await(
+        'SELECT firstname FROM users WHERE identifier = ?',
         { identifier }
     )
 
-    return (tonumber(isCreated) or 0) == 1
+    return firstname ~= nil and firstname ~= ''
 end)
 
 -- Récupérer les données du personnage
@@ -39,7 +39,7 @@ lib.callback.register('brickston_character:getCharacter', function(source)
     if not identifier then return nil end
 
     local character = MySQL.single.await(
-        'SELECT sex, firstname, lastname, nationality, height, dateofbirth, skin, position, last_played FROM users WHERE identifier = ? AND is_created = 1',
+        'SELECT sex, firstname, lastname, dateofbirth, skin, position FROM users WHERE identifier = ? AND firstname IS NOT NULL AND firstname != \'\'',
         { identifier }
     )
 
@@ -64,12 +64,12 @@ RegisterNetEvent('brickston_character:createCharacter', function(data)
     end
 
     -- Vérifier si le personnage existe déjà
-    local isCreated = MySQL.scalar.await(
-        'SELECT is_created FROM users WHERE identifier = ?',
+    local firstname = MySQL.scalar.await(
+        'SELECT firstname FROM users WHERE identifier = ?',
         { identifier }
     )
 
-    if (tonumber(isCreated) or 0) == 1 then
+    if firstname and firstname ~= '' then
         TriggerClientEvent('ox_lib:notify', source, {
             title = 'Erreur',
             description = 'Vous avez déjà créé un personnage.',
@@ -121,8 +121,8 @@ RegisterNetEvent('brickston_character:createCharacter', function(data)
 
     -- UPDATE la ligne existante dans users (créée par ESX)
     MySQL.update.await(
-        'UPDATE users SET sex = ?, firstname = ?, lastname = ?, nationality = ?, height = ?, dateofbirth = ?, position = ?, last_played = NOW(), is_created = 1 WHERE identifier = ?',
-        { data.gender, firstName, lastName, data.nationality, height, data.birthDate, defaultPos, identifier }
+        'UPDATE users SET sex = ?, firstname = ?, lastname = ?, dateofbirth = ? WHERE identifier = ?',
+        { data.gender, firstName, lastName, data.birthDate, identifier }
     )
 
     TriggerClientEvent('ox_lib:notify', source, {
@@ -156,7 +156,7 @@ RegisterNetEvent('brickston_character:loadCharacter', function()
     if not identifier then return end
 
     local character = MySQL.single.await(
-        'SELECT sex, firstname, lastname, nationality, height, dateofbirth, skin, position, last_played FROM users WHERE identifier = ? AND is_created = 1',
+        'SELECT sex, firstname, lastname, dateofbirth, skin, position FROM users WHERE identifier = ? AND firstname IS NOT NULL AND firstname != \'\'',
         { identifier }
     )
 
@@ -170,12 +170,6 @@ RegisterNetEvent('brickston_character:loadCharacter', function()
         TriggerClientEvent('brickston_character:openCreator', source)
         return
     end
-
-    -- Mettre à jour la date de dernière connexion
-    MySQL.update.await(
-        'UPDATE users SET last_played = NOW() WHERE identifier = ?',
-        { identifier }
-    )
 
     -- Envoyer les données au client pour le spawn
     TriggerClientEvent('brickston_character:spawnCharacter', source, character)
