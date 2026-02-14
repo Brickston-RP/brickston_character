@@ -81,6 +81,30 @@ $(document).click(function(e) {
 });
 
 // ════════════════════════════════════════════
+// DATE DE NAISSANCE (format JJ/MM/AAAA)
+// ════════════════════════════════════════════
+
+$('#input-birthdate').on('input', function() {
+    let val = $(this).val().replace(/\D/g, '');
+
+    if (val.length > 8) val = val.substring(0, 8);
+
+    if (val.length >= 5) {
+        val = val.substring(0, 2) + '/' + val.substring(2, 4) + '/' + val.substring(4);
+    } else if (val.length >= 3) {
+        val = val.substring(0, 2) + '/' + val.substring(2);
+    }
+
+    $(this).val(val);
+});
+
+$('#input-birthdate').on('keydown', function(e) {
+    const allowed = ['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab'];
+    if (allowed.includes(e.key)) return;
+    if (!/\d/.test(e.key)) e.preventDefault();
+});
+
+// ════════════════════════════════════════════
 // BOUTON CRÉER
 // ════════════════════════════════════════════
 
@@ -101,7 +125,7 @@ $('#btn-create').click(function() {
         return;
     }
 
-    if (!birthDate || birthDate.length < 8) {
+    if (!birthDate || !/^\d{2}\/\d{2}\/\d{4}$/.test(birthDate)) {
         shakeField('#input-birthdate');
         return;
     }
