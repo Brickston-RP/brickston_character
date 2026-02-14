@@ -22,11 +22,12 @@ server_scripts {
     'server/main.lua',
 }
 
-ui_page 'UI/brickston_character_creator.html'
+ui_page 'UI/index.html'
 
 files {
-    'UI/brickston_character_creator.html',
-    'UI/logo.png',
+    'UI/index.html',
+    'UI/style.css',
+    'UI/script.js',
 }
 
 dependencies {
