@@ -212,15 +212,36 @@ width:100%;
 background:var(--bg);
 border:1px solid var(--border);
 border-radius:14px;
-overflow:hidden;
+overflow-y:auto;
+overflow-x:hidden;
 max-height:0;
 opacity:0;
 transition:.25s;
+z-index:10;
 }
 
 .dropdown.open .dropdown-list{
-max-height:200px;
+max-height:180px;
 opacity:1;
+}
+
+/* scrollbar dropdown */
+
+.dropdown-list::-webkit-scrollbar{
+width:6px;
+}
+
+.dropdown-list::-webkit-scrollbar-track{
+background:transparent;
+}
+
+.dropdown-list::-webkit-scrollbar-thumb{
+background:rgba(255,255,255,.15);
+border-radius:3px;
+}
+
+.dropdown-list::-webkit-scrollbar-thumb:hover{
+background:rgba(255,255,255,.25);
 }
 
 .option{
