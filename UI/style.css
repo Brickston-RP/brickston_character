@@ -1,0 +1,259 @@
+:root{
+--primary:#bf1731;
+--primary-glow:rgba(191,23,49,.35);
+--bg:rgba(30,30,35,.95);
+--border:rgba(255,255,255,.1);
+--muted:rgba(255,255,255,.6);
+}
+
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:'Outfit',sans-serif;
+}
+
+body{
+height:100vh;
+background:rgba(0,0,0,.35);
+display:flex;
+align-items:center;
+padding-left:60px;
+}
+
+/* card */
+
+.identity-card{
+width:430px;
+border-radius:18px;
+background:var(--bg);
+border:1px solid var(--border);
+box-shadow:0 20px 60px rgba(0,0,0,.45);
+overflow:hidden;
+}
+
+/* header */
+
+.card-header{
+padding:18px;
+text-align:center;
+}
+
+.card-title{
+font-size:22px;
+font-weight:800;
+color:white;
+}
+
+.accent{
+color:var(--primary);
+}
+
+.card-subtitle{
+margin-top:4px;
+font-size:12px;
+color:rgba(255,255,255,.35);
+}
+
+.header-divider{
+margin:12px auto 0;
+width:72%;
+height:1px;
+background:rgba(255,255,255,.14);
+}
+
+/* body */
+
+.card-body{
+padding:16px;
+display:flex;
+flex-direction:column;
+gap:12px;
+}
+
+/* fields */
+
+.field-label{
+font-size:12px;
+font-weight:700;
+color:rgba(255,255,255,.65);
+margin-bottom:6px;
+}
+
+.field-box{
+display:flex;
+align-items:center;
+gap:10px;
+height:48px;
+border-radius:14px;
+border:1px solid var(--border);
+background:rgba(255,255,255,.03);
+padding:0 12px;
+}
+
+.field-box input{
+width:100%;
+border:none;
+outline:none;
+background:none;
+color:white;
+}
+
+/* slider */
+
+.slider-wrap{
+display:flex;
+align-items:center;
+gap:10px;
+}
+
+.slider-wrap input{
+flex:1;
+accent-color:var(--primary);
+}
+
+.slider-value{
+width:54px;
+height:32px;
+border-radius:10px;
+display:flex;
+align-items:center;
+justify-content:center;
+background:rgba(191,23,49,.15);
+border:1px solid rgba(191,23,49,.25);
+color:white;
+font-weight:800;
+}
+
+/* GENRE */
+
+.gender-row{
+display:flex;
+gap:10px;
+}
+
+.gender-btn{
+flex:1;
+height:64px;
+display:flex;
+align-items:center;
+gap:12px;
+border-radius:14px;
+border:1px solid var(--border);
+background:rgba(255,255,255,.03);
+cursor:pointer;
+transition:.2s;
+color:white;
+padding:0 14px;
+}
+
+.gender-btn:hover{
+background:rgba(255,255,255,.06);
+transform:translateY(-1px);
+}
+
+.gender-btn.active{
+background:rgba(191,23,49,.18);
+border-color:rgba(191,23,49,.7);
+}
+
+/* icons */
+
+.icon-square{
+width:38px;
+height:38px;
+border-radius:12px;
+display:flex;
+align-items:center;
+justify-content:center;
+background:rgba(0,0,0,.18);
+border:1px solid rgba(255,255,255,.1);
+}
+
+.btn-text{
+display:flex;
+flex-direction:column;
+}
+
+.btn-title{
+font-weight:800;
+}
+
+.btn-sub{
+font-size:12px;
+color:var(--muted);
+}
+
+/* dropdown */
+
+.dropdown{
+position:relative;
+}
+
+.dropdown-selected{
+display:flex;
+align-items:center;
+justify-content:space-between;
+gap:10px;
+height:48px;
+border-radius:14px;
+border:1px solid var(--border);
+background:rgba(255,255,255,.03);
+padding:0 12px;
+color:white;
+cursor:pointer;
+}
+
+.dropdown-list{
+position:absolute;
+top:54px;
+left:0;
+width:100%;
+background:var(--bg);
+border:1px solid var(--border);
+border-radius:14px;
+overflow:hidden;
+max-height:0;
+opacity:0;
+transition:.25s;
+}
+
+.dropdown.open .dropdown-list{
+max-height:200px;
+opacity:1;
+}
+
+.option{
+padding:10px 14px;
+cursor:pointer;
+color:white;
+}
+
+.option:hover{
+background:rgba(191,23,49,.2);
+}
+
+/* CTA */
+
+.action-btn{
+width:100%;
+height:64px;
+border-radius:14px;
+border:none;
+display:flex;
+align-items:center;
+gap:12px;
+padding:0 14px;
+cursor:pointer;
+color:white;
+margin-top:6px;
+}
+
+.primary{
+background:var(--primary);
+box-shadow:0 10px 22px var(--primary-glow);
+}
+
+.primary:hover{
+transform:translateY(-2px);
+}

@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>ARISE Identity</title>
+
+<link rel="stylesheet" href="style.css">
+
+<link rel="stylesheet"
+href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+</head>
+
+<body>
+
+<div class="identity-card">
+
+<!-- HEADER -->
+
+<div class="card-header">
+<div class="card-title">
+BRICKSTON <span class="accent">IDENTITY</span>
+</div>
+
+<div class="card-subtitle">
+Création personnage
+</div>
+
+<div class="header-divider"></div>
+</div>
+
+<!-- BODY -->
+
+<div class="card-body">
+
+<!-- prénom -->
+
+<div class="field">
+<div class="field-label">PRÉNOM</div>
+
+<div class="field-box">
+<i class="fa-solid fa-user"></i>
+<input type="text" placeholder="John">
+</div>
+</div>
+
+<!-- nom -->
+
+<div class="field">
+<div class="field-label">NOM</div>
+
+<div class="field-box">
+<i class="fa-solid fa-id-card"></i>
+<input type="text" placeholder="Doe">
+</div>
+</div>
+
+<!-- date -->
+
+<div class="field">
+<div class="field-label">NÉ(E) LE</div>
+
+<div class="field-box">
+<i class="fa-solid fa-calendar-days"></i>
+<input type="text" placeholder="JJ / MM / AAAA">
+</div>
+</div>
+
+<!-- taille -->
+
+<div class="field">
+<div class="field-label">TAILLE</div>
+
+<div class="slider-wrap">
+<input id="height" type="range" min="140" max="210" value="170">
+<div id="heightValue" class="slider-value">170</div>
+</div>
+</div>
+
+<!-- GENRE -->
+
+<div class="field">
+<div class="field-label">GENRE</div>
+
+<div class="gender-row">
+
+<button class="gender-btn active">
+<div class="icon-square">
+<i class="fa-solid fa-person"></i>
+</div>
+
+<div class="btn-text">
+<div class="btn-title">Homme</div>
+<div class="btn-sub">Sélectionné</div>
+</div>
+</button>
+
+<button class="gender-btn">
+<div class="icon-square">
+<i class="fa-solid fa-person-dress"></i>
+</div>
+
+<div class="btn-text">
+<div class="btn-title">Femme</div>
+<div class="btn-sub">Sélectionner</div>
+</div>
+</button>
+
+</div>
+</div>
+
+<!-- NATIONALITÉ -->
+
+<div class="field">
+<div class="field-label">NATIONALITÉ</div>
+
+<div class="dropdown">
+
+<div class="dropdown-selected">
+<i class="fa-solid fa-flag"></i>
+<span>Sélectionnez une nationalité</span>
+<i class="fa-solid fa-chevron-down"></i>
+</div>
+
+<div class="dropdown-list">
+
+<div class="option">France</div>
+<div class="option">Belgique</div>
+<div class="option">Canada</div>
+<div class="option">USA</div>
+<div class="option">Espagne</div>
+<div class="option">Italie</div>
+
+</div>
+</div>
+</div>
+
+<!-- bouton -->
+
+<button class="action-btn primary big">
+
+<div class="icon-square">
+<i class="fa-solid fa-check"></i>
+</div>
+
+<div class="btn-text">
+<div class="btn-title">Créer votre personnage</div>
+<div class="btn-sub">Valider les informations</div>
+</div>
+
+</button>
+
+</div>
+</div>
+
+<script src="script.js"></script>
+
+</body>
+</html>
