@@ -239,6 +239,13 @@ RegisterNetEvent('brickston_character:spawnCharacter', function(character)
     })
 end)
 
+-- Fallback : le serveur demande d'ouvrir le créateur (aucun personnage trouvé)
+RegisterNetEvent('brickston_character:openCreator', function()
+    isCheckingCharacter = false
+    characterLoaded = false
+    OpenCreator()
+end)
+
 -- ════════════════════════════════════════════
 -- COMMANDES (DEV)
 -- ════════════════════════════════════════════
