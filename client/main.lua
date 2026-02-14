@@ -2,7 +2,6 @@ local isCreatorOpen = false
 local creatorCam = nil
 local creatorPed = nil
 local characterLoaded = false
-local isCheckingCharacter = false
 
 -- ════════════════════════════════════════════
 -- UTILS
@@ -163,8 +162,14 @@ function CloseCreator()
 end
 
 -- ════════════════════════════════════════════
--- EVENTS
+-- EVENTS (serveur → client)
 -- ════════════════════════════════════════════
+
+-- Le serveur a détecté que le joueur n'a pas de personnage
+RegisterNetEvent('brickston_character:openCreator', function()
+    characterLoaded = false
+    OpenCreator()
+end)
 
 -- Appelé quand le personnage est créé avec succès
 RegisterNetEvent('brickston_character:characterCreated', function(data)
@@ -189,7 +194,7 @@ RegisterNetEvent('brickston_character:characterCreated', function(data)
     TriggerEvent('brickston_character:onCharacterLoaded', data)
 end)
 
--- Spawn un personnage existant
+-- Spawn un personnage existant (envoyé par le serveur via checkIdentity)
 RegisterNetEvent('brickston_character:spawnCharacter', function(character)
     CloseCreator()
 
@@ -233,17 +238,19 @@ RegisterNetEvent('brickston_character:spawnCharacter', function(character)
         sex = character.sex,
         firstName = character.firstname,
         lastName = character.lastname,
-        nationality = character.nationality,
-        height = character.height,
         birthDate = character.dateofbirth,
     })
 end)
 
--- Fallback : le serveur demande d'ouvrir le créateur (aucun personnage trouvé)
-RegisterNetEvent('brickston_character:openCreator', function()
-    isCheckingCharacter = false
+-- ════════════════════════════════════════════
+-- ESX PLAYER LOADED (écran noir en attendant le serveur)
+-- ════════════════════════════════════════════
+
+-- Quand ESX charge le joueur, on fade out et on attend
+-- que le serveur envoie spawnCharacter ou openCreator
+RegisterNetEvent('esx:playerLoaded', function()
     characterLoaded = false
-    OpenCreator()
+    DoScreenFadeOut(0)
 end)
 
 -- ════════════════════════════════════════════
@@ -283,7 +290,7 @@ CreateThread(function()
     end
 end)
 
--- Sauvegarde à la déconnexion
+-- Sauvegarde à l'arrêt de la resource
 AddEventHandler('onResourceStop', function(resource)
     if resource == GetCurrentResourceName() then
         if characterLoaded then
@@ -299,59 +306,6 @@ AddEventHandler('onResourceStop', function(resource)
         end
         CloseCreator()
     end
-end)
-
--- ════════════════════════════════════════════
--- AUTO-OPEN AU SPAWN (utilise l'event ESX)
--- ════════════════════════════════════════════
-
--- Vérifie le personnage avec retries (le serveur peut ne pas être prêt après un restart)
-local function CheckAndHandleCharacter()
-    if isCheckingCharacter or characterLoaded then return end
-    isCheckingCharacter = true
-
-    DoScreenFadeOut(0)
-
-    -- Retry jusqu'à 5 fois (laisse le temps au serveur d'enregistrer ses callbacks)
-    local hasChar = nil
-    for i = 1, 5 do
-        local ok, result = pcall(lib.callback.await, 'brickston_character:hasCharacter', false)
-        if ok and result ~= nil then
-            hasChar = result
-            break
-        end
-        Wait(2000)
-    end
-
-    if hasChar then
-        TriggerServerEvent('brickston_character:loadCharacter')
-    else
-        OpenCreator()
-    end
-
-    isCheckingCharacter = false
-end
-
--- Quand ESX a fini de charger le joueur (connexion / reconnexion)
-RegisterNetEvent('esx:playerLoaded', function(xPlayer)
-    characterLoaded = false
-    CheckAndHandleCharacter()
-end)
-
--- Fallback si la resource est restart en cours de jeu
-AddEventHandler('onClientResourceStart', function(resource)
-    if resource ~= GetCurrentResourceName() then return end
-
-    -- Attendre que le serveur soit prêt
-    Wait(2000)
-
-    -- Vérifier qu'ESX a chargé le joueur
-    local ESX = exports['es_extended']:getSharedObject()
-    local playerData = ESX.GetPlayerData()
-    if not playerData or not next(playerData) then return end
-
-    characterLoaded = false
-    CheckAndHandleCharacter()
 end)
 
 -- Export pour d'autres resources

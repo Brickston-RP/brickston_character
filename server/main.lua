@@ -1,13 +1,17 @@
 -- ════════════════════════════════════════════════════════════
 -- BRICKSTON CHARACTER - SERVER
--- Update dans la table `users` (gérée par ESX)
--- ESX crée déjà la ligne dans users à la connexion,
--- on ne fait que lire/modifier les colonnes character creator.
+-- Inspiré du pattern esx_identity :
+-- Le serveur contrôle tout (check DB → envoie event au client)
 -- ════════════════════════════════════════════════════════════
 
 ESX = exports['es_extended']:getSharedObject()
 
--- Récupère l'identifier ESX du joueur (sans préfixe license:)
+local alreadyRegistered = {}
+
+-- ════════════════════════════════════════════
+-- UTILS
+-- ════════════════════════════════════════════
+
 local function GetESXIdentifier(source)
     local xPlayer = ESX.GetPlayerFromId(source)
     if xPlayer then
@@ -17,23 +21,77 @@ local function GetESXIdentifier(source)
 end
 
 -- ════════════════════════════════════════════
--- CALLBACKS
+-- CHECK IDENTITY (pattern esx_identity)
 -- ════════════════════════════════════════════
 
--- Vérifier si le joueur a déjà créé un personnage
+-- Vérifie dans la BDD si le joueur a un personnage,
+-- puis envoie le bon event au client
+local function checkIdentity(xPlayer)
+    local result = MySQL.single.await(
+        'SELECT sex, firstname, lastname, dateofbirth, skin, position FROM users WHERE identifier = ?',
+        { xPlayer.identifier }
+    )
+
+    -- Pas de ligne ou firstname vide → pas de personnage
+    if not result or not result.firstname or result.firstname == '' then
+        alreadyRegistered[xPlayer.identifier] = false
+        TriggerClientEvent('brickston_character:openCreator', xPlayer.source)
+        return
+    end
+
+    -- Le personnage existe
+    alreadyRegistered[xPlayer.identifier] = true
+
+    -- Mettre à jour les données ESX (comme esx_identity)
+    xPlayer.setName(('%s %s'):format(result.firstname, result.lastname))
+    xPlayer.set('firstName', result.firstname)
+    xPlayer.set('lastName', result.lastname)
+    xPlayer.set('dateofbirth', result.dateofbirth)
+    xPlayer.set('sex', result.sex)
+
+    -- Envoyer au client pour le spawn
+    TriggerClientEvent('brickston_character:spawnCharacter', xPlayer.source, result)
+
+    print(('[brickston_character] %s a chargé le personnage %s %s'):format(
+        GetPlayerName(xPlayer.source), result.firstname, result.lastname
+    ))
+end
+
+-- ════════════════════════════════════════════
+-- EVENTS ESX (connexion + restart resource)
+-- ════════════════════════════════════════════
+
+-- Quand ESX charge un joueur (connexion / reconnexion)
+RegisterNetEvent('esx:playerLoaded', function(playerId, xPlayer)
+    checkIdentity(xPlayer)
+end)
+
+-- Quand la resource restart en cours de jeu
+-- (re-vérifie tous les joueurs connectés, comme esx_identity)
+AddEventHandler('onResourceStart', function(resource)
+    if resource ~= GetCurrentResourceName() then return end
+
+    Wait(500)
+
+    local xPlayers = ESX.GetExtendedPlayers()
+    for i = 1, #xPlayers do
+        if xPlayers[i] then
+            checkIdentity(xPlayers[i])
+        end
+    end
+end)
+
+-- ════════════════════════════════════════════
+-- CALLBACKS (compatibilité)
+-- ════════════════════════════════════════════
+
 lib.callback.register('brickston_character:hasCharacter', function(source)
     local identifier = GetESXIdentifier(source)
     if not identifier then return false end
 
-    local firstname = MySQL.scalar.await(
-        'SELECT firstname FROM users WHERE identifier = ?',
-        { identifier }
-    )
-
-    return firstname ~= nil and firstname ~= ''
+    return alreadyRegistered[identifier] == true
 end)
 
--- Récupérer les données du personnage
 lib.callback.register('brickston_character:getCharacter', function(source)
     local identifier = GetESXIdentifier(source)
     if not identifier then return nil end
@@ -63,13 +121,8 @@ RegisterNetEvent('brickston_character:createCharacter', function(data)
         return
     end
 
-    -- Vérifier si le personnage existe déjà
-    local firstname = MySQL.scalar.await(
-        'SELECT firstname FROM users WHERE identifier = ?',
-        { identifier }
-    )
-
-    if firstname and firstname ~= '' then
+    -- Vérifier si le personnage existe déjà (mémoire + BDD)
+    if alreadyRegistered[identifier] then
         TriggerClientEvent('ox_lib:notify', source, {
             title = 'Erreur',
             description = 'Vous avez déjà créé un personnage.',
@@ -111,19 +164,24 @@ RegisterNetEvent('brickston_character:createCharacter', function(data)
         return
     end
 
-    -- Position par défaut en JSON
-    local defaultPos = json.encode({
-        x = Config.DefaultSpawn.x,
-        y = Config.DefaultSpawn.y,
-        z = Config.DefaultSpawn.z,
-        w = Config.DefaultSpawn.w,
-    })
-
     -- UPDATE la ligne existante dans users (créée par ESX)
     MySQL.update.await(
         'UPDATE users SET sex = ?, firstname = ?, lastname = ?, dateofbirth = ? WHERE identifier = ?',
         { data.gender, firstName, lastName, data.birthDate, identifier }
     )
+
+    -- Marquer comme enregistré
+    alreadyRegistered[identifier] = true
+
+    -- Mettre à jour les données ESX
+    local xPlayer = ESX.GetPlayerFromId(source)
+    if xPlayer then
+        xPlayer.setName(('%s %s'):format(firstName, lastName))
+        xPlayer.set('firstName', firstName)
+        xPlayer.set('lastName', lastName)
+        xPlayer.set('dateofbirth', data.birthDate)
+        xPlayer.set('sex', data.gender)
+    end
 
     TriggerClientEvent('ox_lib:notify', source, {
         title = 'Brickston RP',
@@ -146,37 +204,16 @@ RegisterNetEvent('brickston_character:createCharacter', function(data)
 end)
 
 -- ════════════════════════════════════════════
--- CHARGEMENT DU PERSONNAGE
+-- CHARGEMENT DU PERSONNAGE (fallback)
 -- ════════════════════════════════════════════
 
 RegisterNetEvent('brickston_character:loadCharacter', function()
     local source = source
-    local identifier = GetESXIdentifier(source)
+    local xPlayer = ESX.GetPlayerFromId(source)
 
-    if not identifier then return end
+    if not xPlayer then return end
 
-    local character = MySQL.single.await(
-        'SELECT sex, firstname, lastname, dateofbirth, skin, position FROM users WHERE identifier = ? AND firstname IS NOT NULL AND firstname != \'\'',
-        { identifier }
-    )
-
-    if not character then
-        TriggerClientEvent('ox_lib:notify', source, {
-            title = 'Erreur',
-            description = 'Aucun personnage trouvé. Veuillez en créer un.',
-            type = 'error',
-        })
-        -- Ouvrir le créateur au lieu de laisser le joueur sur écran noir
-        TriggerClientEvent('brickston_character:openCreator', source)
-        return
-    end
-
-    -- Envoyer les données au client pour le spawn
-    TriggerClientEvent('brickston_character:spawnCharacter', source, character)
-
-    print(('[brickston_character] %s a chargé le personnage %s %s'):format(
-        GetPlayerName(source), character.firstname, character.lastname
-    ))
+    checkIdentity(xPlayer)
 end)
 
 -- ════════════════════════════════════════════
@@ -217,7 +254,10 @@ end)
 
 AddEventHandler('playerDropped', function()
     local source = source
-    -- La sauvegarde de position est gérée côté client avant la déconnexion
+    local identifier = GetESXIdentifier(source)
+    if identifier then
+        alreadyRegistered[identifier] = nil
+    end
 end)
 
 print('[brickston_character] Resource démarrée avec succès')
