@@ -238,6 +238,8 @@ RegisterNetEvent('brickston_character:spawnCharacter', function(character)
         sex = character.sex,
         firstName = character.firstname,
         lastName = character.lastname,
+        nationality = character.nationality,
+        height = character.height,
         birthDate = character.dateofbirth,
     })
 end)
