@@ -28,7 +28,7 @@ end
 -- puis envoie le bon event au client
 local function checkIdentity(xPlayer)
     local result = MySQL.single.await(
-        'SELECT sex, firstname, lastname, dateofbirth, skin, position FROM users WHERE identifier = ?',
+        'SELECT sex, firstname, lastname, nationality, height, dateofbirth, skin, position FROM users WHERE identifier = ?',
         { xPlayer.identifier }
     )
 
@@ -48,6 +48,8 @@ local function checkIdentity(xPlayer)
     xPlayer.set('lastName', result.lastname)
     xPlayer.set('dateofbirth', result.dateofbirth)
     xPlayer.set('sex', result.sex)
+    xPlayer.set('height', result.height)
+    xPlayer.set('nationality', result.nationality)
 
     -- Envoyer au client pour le spawn
     TriggerClientEvent('brickston_character:spawnCharacter', xPlayer.source, result)
@@ -97,7 +99,7 @@ lib.callback.register('brickston_character:getCharacter', function(source)
     if not identifier then return nil end
 
     local character = MySQL.single.await(
-        'SELECT sex, firstname, lastname, dateofbirth, skin, position FROM users WHERE identifier = ? AND firstname IS NOT NULL AND firstname != \'\'',
+        'SELECT sex, firstname, lastname, nationality, height, dateofbirth, skin, position FROM users WHERE identifier = ? AND firstname IS NOT NULL AND firstname != \'\'',
         { identifier }
     )
 
@@ -166,8 +168,8 @@ RegisterNetEvent('brickston_character:createCharacter', function(data)
 
     -- UPDATE la ligne existante dans users (créée par ESX)
     MySQL.update.await(
-        'UPDATE users SET sex = ?, firstname = ?, lastname = ?, dateofbirth = ? WHERE identifier = ?',
-        { data.gender, firstName, lastName, data.birthDate, identifier }
+        'UPDATE users SET sex = ?, firstname = ?, lastname = ?, nationality = ?, height = ?, dateofbirth = ? WHERE identifier = ?',
+        { data.gender, firstName, lastName, data.nationality, height, data.birthDate, identifier }
     )
 
     -- Marquer comme enregistré
@@ -181,6 +183,8 @@ RegisterNetEvent('brickston_character:createCharacter', function(data)
         xPlayer.set('lastName', lastName)
         xPlayer.set('dateofbirth', data.birthDate)
         xPlayer.set('sex', data.gender)
+        xPlayer.set('height', height)
+        xPlayer.set('nationality', data.nationality)
     end
 
     TriggerClientEvent('ox_lib:notify', source, {
